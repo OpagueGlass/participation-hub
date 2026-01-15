@@ -7,28 +7,19 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function ChatbotPage() {
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" size="sm" asChild className="mb-2">
-            <Link href="/dashboard">
-              <ArrowLeft className="mr-2 size-4" />
-              Back to Dashboard
-            </Link>
-          </Button>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Bot className="size-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Research Chatbot</h1>
-              <p className="text-sm text-muted-foreground">Ask questions about your datasets</p>
-            </div>
-          </div>
-        </div>
-      </header>
 
-      <main className="flex-1 container mx-auto px-4 py-6 flex flex-col">
+          <div className="flex flex-col gap-6">
+      <div className="flex items-center gap-3">
+        <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
+          <Bot className="size-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Research Chatbot</h1>
+          <p className="text-sm text-muted-foreground">Ask questions about your datasets</p>
+        </div>
+      </div>
+
+
         <Card className="flex-1 flex flex-col">
           <CardHeader>
             <CardTitle className="text-base">Chat History</CardTitle>
@@ -93,7 +84,6 @@ export default function ChatbotPage() {
             </p>
           </CardContent>
         </Card>
-      </main>
     </div>
   )
 }

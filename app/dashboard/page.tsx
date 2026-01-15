@@ -34,27 +34,11 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Participation Hub</h1>
-            <p className="text-sm text-muted-foreground">Welcome back, Participant</p>
-          </div>
-          <Button variant="outline" size="sm">
-            <LogOut className="mr-2 size-4" />
-            Logout
-          </Button>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-foreground mb-2">Dashboard</h2>
-          <p className="text-muted-foreground">
-            Manage your research participation and explore your data contributions
-          </p>
-        </div>
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground">Manage your research participation and explore your data contributions</p>
+      </div>
 
         <div className="mb-8">
           <Card className="border border-primary/20">
@@ -80,19 +64,19 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-2xl font-bold text-foreground">My Collections</h3>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/dashboard/collections">View All</Link>
-            </Button>
-          </div>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold tracking-tight">My Collections</h2>
+          <Button variant="outline" asChild>
+            <Link href="/dashboard/collections">View All</Link>
+          </Button>
+        </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {collections.map((collection) => (
-              <Link href={`/dashboard/collections/${collection.id}`} key={collection.id} className="block">
-                <Card className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
+              <Link href={`/dashboard/collections/${collection.id}`} key={collection.id} className="block h-full">
+                <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
+                  <CardHeader className="flex-1">
                     <div className="flex items-start justify-between mb-2">
                       <CardTitle className="text-lg leading-tight">{collection.title}</CardTitle>
                       <Badge variant={collection.status === "Active" ? "default" : "secondary"}>
@@ -101,7 +85,7 @@ export default function DashboardPage() {
                     </div>
                     <CardDescription className="line-clamp-2">{collection.description}</CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-0 flex flex-col flex-1 justify-end">
                     <div className="space-y-4">
                       {/* <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Contributions</span>
@@ -176,7 +160,6 @@ export default function DashboardPage() {
             </Link>
           </div>
         </div>
-      </main>
     </div>
   );
 }

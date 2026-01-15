@@ -16,7 +16,7 @@ export function ChatbotFAB() {
       {!isOpen && (
         <Button
           size="lg"
-          className="fixed bottom-6 right-6 size-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+          className="fixed bottom-6 right-6 size-14 rounded-full shadow-lg hover:shadow-xl transition-shadow border border-border"
           onClick={() => setIsOpen(true)}
         >
           <Bot className="size-6" />
@@ -25,7 +25,7 @@ export function ChatbotFAB() {
 
       {/* Chatbot Window */}
       {isOpen && (
-        <Card className="fixed bottom-6 right-6 w-96 h-[32rem] shadow-2xl flex flex-col">
+        <Card className="fixed bottom-6 right-6 w-96 h-[32rem] shadow-2xl flex flex-col pt-6 pb-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 border-b">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-primary/10">

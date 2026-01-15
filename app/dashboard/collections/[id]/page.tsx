@@ -418,26 +418,19 @@ export default function CollectionDetailPage() {
   ] as const;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" size="sm" asChild className="mb-2">
-            <Link href="/dashboard">
-              <ArrowLeft className="mr-2 size-4" />
-              Back to Dashboard
-            </Link>
-          </Button>
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground mb-1">{collection.title}</h1>
-              <p className="text-sm text-muted-foreground">{collection.description}</p>
-            </div>
-            <Badge variant={collection.status === "Active" ? "default" : "secondary"}>{collection.status}</Badge>
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold tracking-tight">{collection.title}</h1>
+            <p className="text-muted-foreground">{collection.description}</p>
           </div>
+          <Badge variant={collection.status === "Active" ? "default" : "secondary"} className="shrink-0">
+            {collection.status}
+          </Badge>
         </div>
-      </header>
+      </div>
 
-      <main className="container mx-auto px-4 py-8">
         <div className="grid gap-6 sm:grid-cols-[1.5fr_1fr] mb-8">
           <StatCard title="Total Participants" value={collection.participants} icon={Users} />
           {/* <StatCard title="Your Contributions" value={collection.contributions} icon={Activity} /> */}
@@ -491,7 +484,6 @@ export default function CollectionDetailPage() {
           </TabsList>
           {tabs.map((tab, index) => tab.content(index))}
         </Tabs>
-      </main>
-    </div>
+      </div>
   );
 }

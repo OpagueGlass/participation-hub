@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Users } from "lucide-react";
+import { ArrowLeft, Calendar, Database, Users } from "lucide-react";
 
 export default function CollectionsPage() {
   const collections = [
@@ -33,24 +33,20 @@ export default function CollectionsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" size="sm" asChild className="mb-2">
-            <Link href="/dashboard">
-              <ArrowLeft className="mr-2 size-4" />
-              Back to Dashboard
-            </Link>
-          </Button>
-          <h1 className="text-2xl font-bold text-foreground">My Collections</h1>
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center gap-3">
+        <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
+          <Database className="size-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Collections</h1>
           <p className="text-sm text-muted-foreground">Research datasets you've contributed to</p>
         </div>
-      </header>
+      </div>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="space-y-6">
-          {collections.map((collection) => (
-            <Link href={`/dashboard/collections/${collection.id}`} key={collection.id} className="block">
+      <div className="space-y-6">
+        {collections.map((collection) => (
+          <Link href={`/dashboard/collections/${collection.id}`} key={collection.id} className="block">
             <Card className="gap-2 hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -80,10 +76,9 @@ export default function CollectionsPage() {
                 </div>
               </CardContent>
             </Card>
-            </Link>
-          ))}
-        </div>
-      </main>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
