@@ -8,18 +8,19 @@ import blackIconUrl from "@/public/black.svg";
 export default function Page() {
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
-        {/* <Breadcrumb>
+              <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+
+          {/* <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbPage>Participation Hub</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb> */}
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-2 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Image src={blackIconUrl} alt="Logo" className="size-12" />
-            <span className="font-semibold text-xl">Participation Hub</span>
+            <span className="font-semibold text-xl">Epsilon</span>
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" asChild>
