@@ -117,7 +117,10 @@ export function DashboardSidebar() {
                     <AvatarFallback>{session?.user.email?.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col gap-0.5 text-left text-sm leading-tight">
-                    {/* <span className="font-semibold">John Doe</span> */}
+                    <span className="font-semibold">
+                      {session?.user.email?.charAt(0).toUpperCase()}
+                      {session?.user.email?.slice(1, session.user.email.indexOf("@"))}
+                    </span>
                     <span className="text-xs text-muted-foreground">{session?.user.email}</span>
                   </div>
                 </SidebarMenuButton>
@@ -129,8 +132,8 @@ export function DashboardSidebar() {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={async () => {
-                    await signOut();
                     router.push("/");
+                    await signOut();
                   }}
                 >
                   <LogOut className="mr-2 size-4" />
