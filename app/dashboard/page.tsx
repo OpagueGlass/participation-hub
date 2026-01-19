@@ -11,34 +11,6 @@ import { useAuth } from "@/context/auth-context";
 export default function DashboardPage() {
   const { session } = useAuth();
 
-  // const collections = [
-  //   {
-  //     id: 1,
-  //     title: "Mental Health and Well-being Study",
-  //     description: "Longitudinal study examining factors affecting mental health in university students.",
-  //     // dateCreated: "January 2023",
-  //     dateCreated: new Date("2023-01-15"),
-  //     status: "Active",
-  //     participants: 245,
-  //   },
-  //   {
-  //     id: 2,
-  //     title: "Sleep Patterns Research",
-  //     description: "Investigation of sleep quality and its correlation with academic performance.",
-  //     dateCreated: new Date("2023-03-22"),
-  //     status: "Active",
-  //     participants: 189,
-  //   },
-  //   {
-  //     id: 3,
-  //     title: "Digital Wellbeing Survey",
-  //     description: "Study exploring the impact of social media usage on overall wellbeing.",
-  //     dateCreated: new Date("2023-06-10"),
-  //     status: "Completed",
-  //     participants: 412,
-  //   },
-  // ];
-
   const { data: collectionsData } = useQuery({
     queryKey: ["collections", session?.user.id],
     queryFn: () => getUserCollections(session!.user.id, 3),
