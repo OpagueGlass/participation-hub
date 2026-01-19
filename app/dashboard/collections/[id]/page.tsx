@@ -5,37 +5,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { ImageZoom } from "@/components/ui/image-zoom";
+import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Activity,
-  ArrowLeft,
-  BookMarked,
-  Calendar,
-  CheckCircle,
-  ImageIcon,
-  Shield,
-  Users,
-  XCircle,
-} from "lucide-react";
-import Link from "next/link";
+import { useAuth } from "@/context/auth-context";
+import { getCollectionById, getConsent, ResearchPaper, updateConsent } from "@/lib/query";
+import { useQuery } from "@tanstack/react-query";
+import { BookMarked, Calendar, CheckCircle, ImageIcon, Shield, Users, XCircle } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
 
 interface AnalyticsImage {
   id: number;
   title: string;
   url: string;
   description: string;
-}
-
-interface ResearchPaper {
-  id: number;
-  title: string;
-  authors: string;
-  journal: string;
-  description: string;
-  publicationDate: Date;
-  link: string;
 }
 
 /**
@@ -140,7 +125,7 @@ function AnalyticsTab({
                   <div className="flex flex-row items-center mb-1 gap-2 justify-between align-top">
                     <h4 className="font-semibold">{paper.title}</h4>
                     <Badge variant="secondary" className="text-xs align-top">
-                      {paper.publicationDate.toLocaleDateString([], {
+                      {paper.publishedAt.toLocaleDateString([], {
                         year: "numeric",
                         month: "short",
                         day: "numeric",
@@ -238,7 +223,13 @@ function AnalyticsTab({
   );
 }
 
-function ConsentTab() {
+function ConsentTab({ profileId, collectionId }: { profileId: string; collectionId: string }) {
+  const { data: consent, refetch } = useQuery({
+    queryKey: ["consent", collectionId, profileId],
+    queryFn: () => getConsent(profileId, collectionId),
+    enabled: !!profileId && !!collectionId,
+  });
+
   return (
     <TabsContent value="consent" className="space-y-6">
       <Card>
@@ -249,13 +240,26 @@ function ConsentTab() {
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between p-4 border border-border rounded-lg">
             <div className="flex items-center gap-3">
-              <CheckCircle className="size-5 text-green-600" />
+              {consent?.consent ? (
+                <CheckCircle className="size-5 text-green-600" />
+              ) : (
+                <XCircle className="size-5 text-destructive" />
+              )}
               <div>
                 <p className="font-semibold">Data Collection Consent</p>
-                <p className="text-sm text-muted-foreground">Active since January 15, 2023</p>
+                <p className="text-sm text-muted-foreground">
+                  {consent?.consent ? `Active since ` : `Revoked on `}
+                  {new Date(consent?.consentUpdatedAt!).toLocaleDateString(undefined, {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
               </div>
             </div>
-            <Badge variant="default">Active</Badge>
+            <Badge variant={consent?.consent ? "default" : "destructive"}>
+              {consent?.consent ? "Active" : "Revoked"}
+            </Badge>
           </div>
 
           <div className="space-y-3">
@@ -277,14 +281,36 @@ function ConsentTab() {
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline" className="flex-1 bg-transparent">
-              <Shield className="mr-2 size-4" />
-              View Full Consent Form
-            </Button>
-            <Button variant="destructive" className="flex-1">
-              <XCircle className="mr-2 size-4" />
-              Revoke Consent
-            </Button>
+            {consent?.consent ? (
+              <>
+                <Button variant="outline" className="flex-1 bg-transparent">
+                  <Shield className="mr-2 size-4" />
+                  View Full Consent Form
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="flex-1"
+                  onClick={async () => {
+                    await updateConsent(profileId, collectionId, false);
+                    toast.success("Consent revoked successfully.");
+                    refetch();
+                  }}
+                >
+                  <XCircle className="mr-2 size-4" />
+                  Revoke Consent
+                </Button>
+              </>
+            ) : (
+              <Card className="flex-1 border border-destructive/40 bg-destructive/10 flex flex-row items-center gap-3 p-4">
+                <XCircle className="size-5 text-destructive" />
+                <div>
+                  <p className="text-sm text-destructive/80">
+                    You have revoked consent for this collection. If this was a mistake, please contact support or the
+                    research team to restore your consent.
+                  </p>
+                </div>
+              </Card>
+            )}
           </div>
 
           <div className="p-4 bg-muted/50 rounded-lg">
@@ -302,88 +328,12 @@ function ConsentTab() {
 export default function CollectionDetailPage() {
   // Mock collection data
   const params = useParams();
-  const collection = {
-    id: params.id,
-    title: "Mental Health and Well-being Study",
-    description: "Longitudinal study examining factors affecting mental health in university students.",
-    dateCreated: new Date("2023-01-15"),
-    status: "Active",
-    participants: 245,
-    contributions: 52,
-    lastActivity: "2 days ago",
-  };
+  const { session } = useAuth();
 
-  const researchPapers = [
-    {
-      id: 1,
-      title: "Depressive Symptoms and Cognitive Decline",
-      authors: "Johar, H., Schaefer, A., Su, T.T.",
-      description:
-        "Depressive symptoms mediate the longitudinal association between diabetes and subjective cognitive decline.",
-      journal: "Preventive Medicine",
-      publicationDate: new Date("2023-05-10"),
-      link: "https://example.com/depressive-symptoms-cognitive-decline",
-    },
-    {
-      id: 2,
-      title: "Multimorbidity in Southeast Asia",
-      authors: "Tan, M.M.C., Prina, A.M., Muniz-Terrera, G., Mohan, D., Ismail, R., et. al.",
-      description:
-        "Prevalence of and factors associated with multimorbidity among 18,101 adults in the South East Asia Community Observatory.",
-      journal: "BMJ Open",
-      publicationDate: new Date("2022-11-15"),
-      link: "https://example.com/multimorbidity-southeast-asia",
-    },
-    {
-      id: 3,
-      title: "Mental Distress and Hypertension Care",
-      authors: "Ang, C.W., Tan, M.M., Bärnighausen, T., Reininghaus, U., Reidpath, D., Su, T.T.",
-      description: "Mental distress along the cascade of care in managing hypertension.",
-      journal: "Scientific Reports",
-      publicationDate: new Date("2022-08-20"),
-      link: "https://example.com/mental-distress-hypertension-care",
-    },
-    {
-      id: 4,
-      title: "Hypertension Care in Asia",
-      authors: "Geldsetzer, P., Tan, M.M., Dewi, F.ST., Quyen, B.T.T., Juvekar, S., et al.",
-      description: "A comparative study of hypertension care across multiple countries.",
-      journal: "Bulletin of the World Health Organization",
-      publicationDate: new Date("2022-03-30"),
-      link: "https://example.com/hypertension-care-asia",
-    },
-    {
-      id: 5,
-      title: "Diabetes Treatment and Mental Illness",
-      authors:
-        "Thangiah, G., Johar, H., Ismail, R., Reininghaus, U., Bärnighausen, T., Thurairajasingam, S., Reidpath, D., Su, T.T.",
-      description:
-        "Diabetes treatment and mental illness: A call for an integrated health care system in underserved semi-rural Malaysia.",
-      journal: "International Journal of Environmental Research and Public Health",
-      publicationDate: new Date("2022-01-25"),
-      link: "https://example.com/diabetes-treatment-mental-illness",
-    },
-    {
-      id: 6,
-      title: "Religiousness and Quality of Life",
-      authors: "Tan, M.M., Reidpath, D.D., Ting, R.S-K., Allotey, P., Su, T.T.",
-      description:
-        "Religiousness and quality of life among older adults of different ethnic groups in Malaysia: A five-year follow-up study.",
-      journal: "Journal of Religion and Health",
-      publicationDate: new Date("2021-09-10"),
-      link: "https://example.com/religiousness-quality-of-life",
-    },
-    {
-      id: 7,
-      title: "Income Inequality and Quality of Life",
-      authors: "Thangiah, G., Said, M.A., Majid, H.A., Reidpath, D., Su, T.T.",
-      description:
-        "Income inequality in quality of life among rural communities in Malaysia: A case for immediate policy consideration.",
-      journal: "International Journal of Environmental Research and Public Health, 17(23)",
-      publicationDate: new Date("2020-12-05"),
-      link: "https://example.com/income-inequality-quality-of-life",
-    },
-  ];
+  const { data: collection } = useQuery({
+    queryKey: ["collection", params.id],
+    queryFn: () => getCollectionById(params.id as string),
+  });
 
   const analyticsImages = [
     {
@@ -406,15 +356,29 @@ export default function CollectionDetailPage() {
     },
   ];
 
+  if (!collection) {
+    return (
+      <div className="flex flex-col items-center justify-center h-96">
+        <Spinner />
+      </div>
+    );
+  }
+
   const tabs = [
     {
       value: "analytics",
       label: "Analytics",
       content: (index: number) => (
-        <AnalyticsTab analyticsImages={analyticsImages} researchPapers={researchPapers} key={index} />
+        <AnalyticsTab analyticsImages={analyticsImages} researchPapers={collection!.papers} key={index} />
       ),
     },
-    { value: "consent", label: "Consent", content: (index: number) => <ConsentTab key={index} /> },
+    {
+      value: "consent",
+      label: "Consent",
+      content: (index: number) => (
+        <ConsentTab key={index} collectionId={collection!.id} profileId={session?.user.id as string} />
+      ),
+    },
   ] as const;
 
   return (
@@ -422,30 +386,29 @@ export default function CollectionDetailPage() {
       <div className="space-y-4">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight">{collection.title}</h1>
-            <p className="text-muted-foreground">{collection.description}</p>
+            <h1 className="text-3xl font-bold tracking-tight">{collection!.title}</h1>
+            <p className="text-muted-foreground">{collection!.description}</p>
           </div>
-          <Badge variant={collection.status === "Active" ? "default" : "secondary"} className="shrink-0">
-            {collection.status}
+          <Badge variant={collection!.status?.description === "Active" ? "default" : "secondary"} className="shrink-0">
+            {collection!.status?.description}
           </Badge>
         </div>
       </div>
 
-        <div className="grid gap-6 sm:grid-cols-[1.5fr_1fr] mb-8">
-          <StatCard title="Total Participants" value={collection.participants} icon={Users} />
-          {/* <StatCard title="Your Contributions" value={collection.contributions} icon={Activity} /> */}
-          <StatCard
-            title="Created"
-            value={collection.dateCreated.toLocaleDateString(undefined, {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-            
-            icon={Calendar}
-          />
+      <div className="grid gap-6 sm:grid-cols-[1.5fr_1fr] mb-8">
+        <StatCard title="Total Participants" value={collection!.participants} icon={Users} />
+        {/* <StatCard title="Your Contributions" value={collection.contributions} icon={Activity} /> */}
+        <StatCard
+          title="Created"
+          value={collection!.createdAt.toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+          icon={Calendar}
+        />
 
-          {/* <Card>
+        {/* <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Participants</CardTitle>
               <Users className="size-4 text-muted-foreground" />
@@ -454,7 +417,7 @@ export default function CollectionDetailPage() {
               <div className="text-2xl font-bold">{collection.participants}</div>
             </CardContent>
           </Card> */}
-          {/* <Card>
+        {/* <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Your Contributions</CardTitle>
               <Activity className="size-4 text-muted-foreground" />
@@ -472,18 +435,18 @@ export default function CollectionDetailPage() {
               <div className="text-2xl font-bold">{collection.dateCreated}</div>
             </CardContent>
           </Card> */}
-        </div>
-
-        <Tabs defaultValue={tabs[0].value} className="space-y-6">
-          <TabsList>
-            {tabs.map((tab) => (
-              <TabsTrigger key={tab.value} value={tab.value}>
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          {tabs.map((tab, index) => tab.content(index))}
-        </Tabs>
       </div>
+
+      <Tabs defaultValue={tabs[0].value} className="space-y-6">
+        <TabsList>
+          {tabs.map((tab) => (
+            <TabsTrigger key={tab.value} value={tab.value}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        {tabs.map((tab, index) => tab.content(index))}
+      </Tabs>
+    </div>
   );
 }

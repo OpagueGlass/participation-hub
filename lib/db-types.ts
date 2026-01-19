@@ -41,25 +41,25 @@ export type Database = {
     Tables: {
       collection_images: {
         Row: {
-          collection_id: string | null
-          description: string | null
+          collection_id: string
+          description: string
           id: number
-          title: string | null
-          url: string | null
+          title: string
+          url: string
         }
         Insert: {
-          collection_id?: string | null
-          description?: string | null
+          collection_id?: string
+          description: string
           id?: number
-          title?: string | null
-          url?: string | null
+          title: string
+          url: string
         }
         Update: {
-          collection_id?: string | null
-          description?: string | null
+          collection_id?: string
+          description?: string
           id?: number
-          title?: string | null
-          url?: string | null
+          title?: string
+          url?: string
         }
         Relationships: [
           {
@@ -73,34 +73,34 @@ export type Database = {
       }
       collection_papers: {
         Row: {
-          authors: string | null
-          collection_id: string | null
-          description: string | null
+          authors: string
+          collection_id: string
+          description: string
           id: number
-          journal: string | null
-          link: string | null
-          published_at: string | null
-          title: string | null
+          journal: string
+          link: string
+          published_at: string
+          title: string
         }
         Insert: {
-          authors?: string | null
-          collection_id?: string | null
-          description?: string | null
+          authors: string
+          collection_id?: string
+          description: string
           id?: number
-          journal?: string | null
-          link?: string | null
-          published_at?: string | null
-          title?: string | null
+          journal: string
+          link: string
+          published_at: string
+          title: string
         }
         Update: {
-          authors?: string | null
-          collection_id?: string | null
-          description?: string | null
+          authors?: string
+          collection_id?: string
+          description?: string
           id?: number
-          journal?: string | null
-          link?: string | null
-          published_at?: string | null
-          title?: string | null
+          journal?: string
+          link?: string
+          published_at?: string
+          title?: string
         }
         Relationships: [
           {
@@ -114,66 +114,83 @@ export type Database = {
       }
       collections: {
         Row: {
-          created_at: string | null
-          description: string | null
+          created_at: string
+          description: string
           id: string
-          participants: number | null
+          participants: number
+          status: number
           title: string
         }
         Insert: {
-          created_at?: string | null
-          description?: string | null
+          created_at?: string
+          description: string
           id?: string
-          participants?: number | null
+          participants?: number
+          status: number
           title: string
         }
         Update: {
-          created_at?: string | null
-          description?: string | null
+          created_at?: string
+          description?: string
           id?: string
-          participants?: number | null
+          participants?: number
+          status?: number
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "collections_status_fkey"
+            columns: ["status"]
+            isOneToOne: false
+            referencedRelation: "status_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profile_collections: {
         Row: {
+          collection_id: string
           consent: boolean
+          consent_updated_at: string
           id: number
           profile_id: string
         }
         Insert: {
+          collection_id: string
           consent?: boolean
+          consent_updated_at?: string
           id?: number
           profile_id?: string
         }
         Update: {
+          collection_id?: string
           consent?: boolean
+          consent_updated_at?: string
           id?: number
           profile_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "profile_collections_profile_id_fkey"
-            columns: ["profile_id"]
+            foreignKeyName: "profile_collections_collection_id_fkey"
+            columns: ["collection_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "collections"
             referencedColumns: ["id"]
           },
         ]
       }
-      profiles: {
+      status_types: {
         Row: {
-          auth_id: string | null
-          id: string
+          description: string
+          id: number
         }
         Insert: {
-          auth_id?: string | null
-          id?: string
+          description: string
+          id?: number
         }
         Update: {
-          auth_id?: string | null
-          id?: string
+          description?: string
+          id?: number
         }
         Relationships: []
       }
@@ -182,12 +199,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_user_id_by_email: {
-        Args: { email: string }
-        Returns: {
-          id: string
-        }[]
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never

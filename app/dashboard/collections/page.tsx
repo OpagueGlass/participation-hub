@@ -1,36 +1,22 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, Database, Users } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/context/auth-context";
+import { getUserCollections } from "@/lib/query";
 
 export default function CollectionsPage() {
-  const collections = [
-    {
-      id: 1,
-      title: "Mental Health and Well-being Study",
-      description: "Longitudinal study examining factors affecting mental health in university students.",
-      dateCreated: "January 2023",
-      status: "Active",
-      participants: 245,
-    },
-    {
-      id: 2,
-      title: "Sleep Patterns Research",
-      description: "Investigation of sleep quality and its correlation with academic performance.",
-      dateCreated: "March 2023",
-      status: "Active",
-      participants: 189,
-    },
-    {
-      id: 3,
-      title: "Digital Wellbeing Survey",
-      description: "Study exploring the impact of social media usage on overall wellbeing.",
-      dateCreated: "June 2023",
-      status: "Completed",
-      participants: 412,
-    },
-  ];
+  const { session } = useAuth();
+
+  const { data: collectionsData } = useQuery({
+    queryKey: ["collections", session?.user.id],
+    queryFn: () => getUserCollections(session!.user.id),
+    enabled: !!session?.user?.id,
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -45,7 +31,7 @@ export default function CollectionsPage() {
       </div>
 
       <div className="space-y-6">
-        {collections.map((collection) => (
+        {collectionsData?.map((collection) => (
           <Link href={`/dashboard/collections/${collection.id}`} key={collection.id} className="block">
             <Card className="gap-2 hover:shadow-lg transition-shadow">
               <CardHeader>
@@ -54,14 +40,16 @@ export default function CollectionsPage() {
                     <CardTitle className="text-xl">{collection.title}</CardTitle>
                     <CardDescription className="text-base">{collection.description}</CardDescription>
                   </div>
-                  <Badge variant={collection.status === "Active" ? "default" : "secondary"}>{collection.status}</Badge>
+                  <Badge variant={collection.status.description === "Active" ? "default" : "secondary"}>
+                    {collection.status.description}
+                  </Badge>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-6 mb-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Calendar className="size-4" />
-                    <span>Created {collection.dateCreated}</span>
+                    <span>Created {collection.createdAt.toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Users className="size-4" />
