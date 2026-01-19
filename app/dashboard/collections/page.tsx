@@ -38,7 +38,7 @@ export default function CollectionsPage() {
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
                     <CardTitle className="text-xl">{collection.title}</CardTitle>
-                    <CardDescription className="text-base">{collection.description}</CardDescription>
+                    <CardDescription className="text-base">{collection.description.split(". ")[0]}</CardDescription>
                   </div>
                   <Badge variant={collection.status.description === "Active" ? "default" : "secondary"}>
                     {collection.status.description}
