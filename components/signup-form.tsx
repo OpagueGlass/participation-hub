@@ -1,50 +1,106 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/context/auth-context";
+import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useState } from "react";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "./ui/input-otp";
-import { Label } from "./ui/label";
+import { redirect } from "next/navigation";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import { Spinner } from "./ui/spinner";
 
-enum SignUpStep {
-  Email = 1,
-  OTP,
-}
+const signUpSchema = z
+  .object({
+    password: z.string().min(8, { message: "Password must be at least 8 characters" }),
+    confirmPassword: z.string().min(8, { message: "Please confirm your password" }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
-function EmailStep({ className, ...props }: React.ComponentProps<"div">) {
+type SignUpFormData = z.infer<typeof signUpSchema>;
+
+export default function SignUpForm({ className, ...props }: React.ComponentProps<"div">) {
+  const { signUp, isLoading, session } = useAuth();
+
+  const form = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  async function onSubmit(data: SignUpFormData) {
+    const error = await signUp(data.password);
+    if (error) {
+      toast.error(error?.message || String(error));
+    } else {
+      toast.success("Account created successfully!");
+    }
+  }
+  
+  if (!session) {
+    return null;
+  }
+
+  if (session.user.user_metadata.hasPassword) {
+    redirect("/dashboard");
+  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
           <CardTitle>Create Your Account</CardTitle>
-          <CardDescription>Enter your email below to create your account</CardDescription>
+          <CardDescription>Enter your password below to create your account</CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
             <FieldGroup>
+              <Controller
+                name="password"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="password">Password</FieldLabel>
+                    <Input {...field} id="password" type="password" placeholder="Enter your password" required />
+                    {fieldState.invalid ? (
+                      <FieldError errors={[fieldState.error]} />
+                    ) : (
+                      <FieldDescription>Must be at least 8 characters long.</FieldDescription>
+                    )}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="confirmPassword"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="confirm-password">Confirm Password</FieldLabel>
+                    <Input {...field} id="confirm-password" type="password" required />
+                    {fieldState.invalid ? (
+                      <FieldError errors={[fieldState.error]} />
+                    ) : (
+                      <FieldDescription>Please confirm your password.</FieldDescription>
+                    )}
+                  </Field>
+                )}
+              />
               <Field>
-                <FieldLabel htmlFor="link">Registration Link</FieldLabel>
-                <Input
-                  id="link"
-                  type="link"
-                  placeholder="https://example.com/register?token={PARTICIPANTID}"
-                  required
-                />
-              </Field>
-              <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="email">Email</FieldLabel>
-                </div>
-                <Input id="email" type="email" required placeholder="Enter your email" />
-              </Field>
-              <Field>
-                <Button type="submit">Send OTP</Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading && <Spinner />}
+                  Create Account
+                </Button>
                 <FieldDescription className="px-6 text-center">
-                  Already have an account? <Link href="/auth/login">Sign in</Link>
+                  Already have an account? <Link href="/login">Sign in</Link>
                 </FieldDescription>
               </Field>
             </FieldGroup>
@@ -53,58 +109,4 @@ function EmailStep({ className, ...props }: React.ComponentProps<"div">) {
       </Card>
     </div>
   );
-}
-
-function OTPStep({ className, ...props }: React.ComponentProps<"div">) {
-  const [otp, setOtp] = useState("");
-  return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle>Create Your Account</CardTitle>
-          <CardDescription>Enter the 6-digit verification code sent to your email</CardDescription>
-        </CardHeader>
-        <CardContent className="mt-4">
-          <div className="space-y-2">
-            <Label htmlFor="otp" className="text-center block text-lg mt-2">
-              Verification Code
-            </Label>
-            <div className="flex justify-center">
-              <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-                <InputOTPGroup>
-                  {[...Array(6)].map((_, i) => (
-                    <InputOTPSlot key={i} index={i} className="w-12 h-12 text-2xl" />
-                  ))}
-                </InputOTPGroup>
-              </InputOTP>
-            </div>
-          </div>
-          <div className="text-sm text-muted-foreground text-center">
-            Didn't receive the code?{" "}
-            <Button variant="link" className="px-0 h-auto text-sm" onClick={() => {}}>
-              Resend
-            </Button>
-          </div>
-          <Button className="w-full mt-12" size="lg" asChild>
-            <Link href="/dashboard">Create Account</Link>
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-export function SignUpForm({ className, ...props }: React.ComponentProps<"div">) {
-  const [signUpStep, setSignUpStep] = useState<SignUpStep>(SignUpStep.Email);
-
-  const handleEmailSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle OTP submission logic here
-    setSignUpStep(SignUpStep.OTP);
-  };
-
-  if (signUpStep === SignUpStep.Email) {
-    return <EmailStep onSubmit={handleEmailSubmit} className={className} {...props} />;
-  }
-  return <OTPStep className={className} {...props} />;
 }

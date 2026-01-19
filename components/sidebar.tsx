@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { Home, Database, MessageSquare, MessageCircle, LogOut, User } from "lucide-react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { Home, Database, MessageSquare, MessageCircle, LogOut, User, LayoutDashboard } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import {
   Sidebar,
@@ -15,17 +15,24 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import iconUrl from "@/public/icon.svg"
-import Image from "next/image"
+} from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import iconUrl from "@/public/icon.svg";
+import Image from "next/image";
+import { useAuth } from "@/context/auth-context";
+import { useRouter } from "next/navigation";
 
 const menuItems = [
   {
-    title: "Home",
+    title: "Summary",
     url: "/dashboard",
-    icon: Home,
+    icon: LayoutDashboard,
   },
   {
     title: "My Collections",
@@ -42,10 +49,12 @@ const menuItems = [
     url: "/dashboard/chatbot",
     icon: MessageCircle,
   },
-]
+];
 
 export function DashboardSidebar() {
-  const pathname = usePathname()
+  const pathname = usePathname();
+  const { signOut } = useAuth();
+  const router = useRouter();
 
   return (
     <Sidebar>
@@ -60,13 +69,29 @@ export function DashboardSidebar() {
           </div>
         </div>
       </SidebarHeader>
+
       <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Overview</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/">
+                    <Home />
+                    <span>Home</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
         <SidebarGroup>
           <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
-                const isActive = pathname === item.url || (item.url !== "/dashboard" && pathname.startsWith(item.url))
+                const isActive = pathname === item.url || (item.url !== "/dashboard" && pathname.startsWith(item.url));
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive}>
@@ -76,7 +101,7 @@ export function DashboardSidebar() {
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                )
+                );
               })}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -102,7 +127,12 @@ export function DashboardSidebar() {
                   <User className="mr-2 size-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={async () => {
+                    await signOut();
+                    router.push("/");
+                  }}
+                >
                   <LogOut className="mr-2 size-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
@@ -112,5 +142,5 @@ export function DashboardSidebar() {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

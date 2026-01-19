@@ -35,7 +35,7 @@ function EmailStep({ className, ...props }: React.ComponentProps<"div">) {
               <Field>
                 <Button type="submit">Send OTP</Button>
                 <FieldDescription className="px-6 text-center">
-                  Already have an account? <Link href="/auth/login">Sign in</Link>
+                  Already have an account? <Link href="/login">Sign in</Link>
                 </FieldDescription>
               </Field>
             </FieldGroup>
@@ -77,7 +77,7 @@ function OTPStep({ className, ...props }: React.ComponentProps<"div">) {
             </Button>
           </div>
           <Button className="w-full mt-12" size="lg" asChild>
-            <Link href="/dashboard">Reset Password</Link>
+            <Link href="/reset-password">Reset Password</Link>
           </Button>
         </CardContent>
       </Card>
@@ -85,7 +85,7 @@ function OTPStep({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-export function ForgotPasswordForm({ className, ...props }: React.ComponentProps<"div">) {
+export default function ForgotPasswordForm({ className, ...props }: React.ComponentProps<"div">) {
   const [signUpStep, setSignUpStep] = useState<SignUpStep>(SignUpStep.Email);
 
   const handleEmailSubmit = (e: React.FormEvent) => {

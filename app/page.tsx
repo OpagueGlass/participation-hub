@@ -1,34 +1,82 @@
+"use client";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, BarChart3, Users, MessageCircle, Lock, FileText } from "lucide-react";
+import {
+  Shield,
+  BarChart3,
+  Users,
+  MessageCircle,
+  Lock,
+  FileText,
+  LayoutDashboard,
+  LogIn,
+  SquareAsterisk,
+} from "lucide-react";
 import Image from "next/image";
 import blackIconUrl from "@/public/black.svg";
+import { useAuth } from "@/context/auth-context";
+import { Session } from "@supabase/supabase-js";
+
+enum AuthState {
+  LOGGED_IN_WITH_PASSWORD,
+  LOGGED_IN_NO_PASSWORD,
+  LOGGED_OUT,
+}
+
+const authStates = [
+  { link: "/dashboard", Label: "Dashboard", icon: LayoutDashboard },
+  { link: "/signup", Label: "Sign Up", icon: SquareAsterisk },
+  { link: "/login", Label: "Login", icon: LogIn },
+];
+
+function ActionButton({
+  session,
+  label,
+  size,
+  variant,
+}: {
+  session: Session | null;
+  label?: string;
+  size?: "sm" | "lg";
+  variant?: "default" | "secondary";
+}) {
+  const currentState = session
+    ? session.user.user_metadata.hasPassword
+      ? AuthState.LOGGED_IN_WITH_PASSWORD
+      : AuthState.LOGGED_IN_NO_PASSWORD
+    : AuthState.LOGGED_OUT;
+
+  const prop = authStates[currentState];
+  return (
+    <Button asChild size={size} variant={variant}>
+      <Link href={prop.link}>
+        {!label && <prop.icon className="mr-1 size-4" />}
+        {label ?? prop.Label}
+      </Link>
+    </Button>
+  );
+}
 
 export default function Page() {
+  const { session } = useAuth();
   return (
     <div className="min-h-screen bg-background">
-              <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-
-          {/* <Breadcrumb>
+      <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        {/* <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbPage>Participation Hub</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb> */}
-        <div className="container mx-auto px-2 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Image src={blackIconUrl} alt="Logo" className="size-12" />
             <span className="font-semibold text-xl">Epsilon</span>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" asChild>
-              <Link href="/auth/login">Login</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/auth/signup">Get Started</Link>
-            </Button>
+            <ActionButton session={session} />
           </div>
         </div>
       </header>
@@ -45,9 +93,7 @@ export default function Page() {
               in real-time.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" asChild>
-                <Link href="/auth/signup">Join as Participant</Link>
-              </Button>
+              <ActionButton size="lg" session={session} label="Get Started" />
               <Button size="lg" variant="outline" asChild>
                 <Link href="/">Learn More</Link>
               </Button>
@@ -152,9 +198,10 @@ export default function Page() {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex justify-center">
-              <Button size="lg" variant="secondary" asChild>
-                <Link href="/auth/signup">Create Your Account</Link>
-              </Button>
+              {/* <Button size="lg" variant="secondary" asChild> */}
+              {/* <Link href="/signup">Create Your Account</Link> */}
+              {/* </Button> */}
+              <ActionButton size="lg" variant="secondary" session={session} label="Join Now" />
             </CardContent>
           </Card>
         </section>
