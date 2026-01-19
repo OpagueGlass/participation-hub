@@ -53,7 +53,7 @@ const menuItems = [
 
 export function DashboardSidebar() {
   const pathname = usePathname();
-  const { signOut } = useAuth();
+  const { signOut, session } = useAuth();
   const router = useRouter();
 
   return (
@@ -114,11 +114,11 @@ export function DashboardSidebar() {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton size="lg">
                   <Avatar className="size-8">
-                    <AvatarFallback>JD</AvatarFallback>
+                    <AvatarFallback>{session?.user.email?.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col gap-0.5 text-left text-sm leading-tight">
-                    <span className="font-semibold">John Doe</span>
-                    <span className="text-xs text-muted-foreground">john.doe@example.com</span>
+                    {/* <span className="font-semibold">John Doe</span> */}
+                    <span className="text-xs text-muted-foreground">{session?.user.email}</span>
                   </div>
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
