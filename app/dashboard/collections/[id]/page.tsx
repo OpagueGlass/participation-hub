@@ -10,48 +10,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/auth-context";
 import { getCollectionById, getConsent, ResearchPaper, updateConsent } from "@/lib/query";
 import { useQuery } from "@tanstack/react-query";
-import { BookMarked, Calendar, CheckCircle, ImageIcon, Shield, Users, XCircle } from "lucide-react";
+import { BookMarked, Calendar, CheckCircle, ExternalLink, ImageIcon, Shield, Users, XCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
+import StatCard from "@/components/stat-card";
 
 interface AnalyticsImage {
   id: number;
   title: string;
   url: string;
   description: string;
-}
-
-/**
- * Creates a statistic card
- */
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-}: {
-  title: string;
-  value: string | number;
-  icon?: React.ComponentType<{ className?: string }>;
-}) {
-  return (
-    <Card>
-      <CardHeader className="flex-1 flex-col">
-        <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <CardTitle>{title}</CardTitle>
-          </div>
-          {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
-        </div>
-        <div className="space-y-2 pt-4 pb-2">
-          <div className="text-2xl font-semibold tracking-tight">
-            {typeof value === "number" ? value.toLocaleString() : value}
-          </div>
-        </div>
-      </CardHeader>
-    </Card>
-  );
 }
 
 function AnalyticsTab({
@@ -137,6 +107,7 @@ function AnalyticsTab({
                   <p className="text-sm text-muted-foreground mb-3">{paper.description}</p>
 
                   <Button size="sm" className="pointer-events-none">
+                    <ExternalLink className="mr-1 size-4" />
                     Read Full Paper
                   </Button>
                 </Link>
