@@ -4,9 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FieldDescription, FieldError } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
+import { AvatarFallback } from "@radix-ui/react-avatar";
+import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { XIcon } from "lucide-react";
 import * as React from "react";
 import { z } from "zod";
+import { Avatar } from "./avatar";
 
 type InputTagsProps = {
   className?: string;
@@ -100,30 +103,34 @@ const InputTags = React.forwardRef<HTMLInputElement, InputTagsProps>(
 
     return (
       <div className="space-y-2">
-        <div
+        <ScrollArea
           ref={containerRef}
           className={cn(
             // caveat: :has() variant requires tailwind v3.4 or above: https://tailwindcss.com/blog/tailwindcss-v3-4#new-has-variant
-            "has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-ring/50 has-[:focus-visible]:border-ring dark:has-[:focus-visible]:ring-neutral-300 min-h-[20vh] max-h-48 overflow-y-auto flex w-full flex-wrap content-start gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm ring-offset-white  disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-950 dark:ring-offset-neutral-950 cursor-text",
+            "has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-ring/50 has-[:focus-visible]:border-ring dark:has-[:focus-visible]:ring-neutral-300 flex aspect-[16/10] w-full overflow-y-auto flex-wrap content-start gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm ring-offset-white  disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-950 dark:ring-offset-neutral-950 cursor-text",
             className,
+            
           )}
           onClick={() => {
             inputRef.current?.focus();
           }}
         >
           {value.slice(0, visibleCount).map((item) => (
-            <Badge key={item} variant="secondary">
-              {item}
+            <Badge key={item} variant="outline" className="flex px-0 py-0.5 gap-0">
+              <Avatar className="ml-0.5 size-6 bg-secondary justify-center items-center" >
+                <AvatarFallback>{item.charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <span className="ml-1.5">{item}</span>
               <Button
-                variant="ghost"
+                variant={null}
                 size="icon"
-                className="ml-2 h-3 w-3"
+                className="size-6"
                 onClick={(e) => {
                   e.stopPropagation();
                   onChange(value.filter((i) => i !== item));
                 }}
               >
-                <XIcon className="w-3" />
+                <XIcon className="size-4" />
               </Button>
             </Badge>
           ))}
@@ -148,7 +155,7 @@ const InputTags = React.forwardRef<HTMLInputElement, InputTagsProps>(
             {...props}
             ref={inputRef}
           />
-        </div>
+        </ScrollArea>
         {!error ? <FieldDescription>{description}</FieldDescription> : <FieldError>{error}</FieldError>}
       </div>
     );
@@ -158,3 +165,4 @@ const InputTags = React.forwardRef<HTMLInputElement, InputTagsProps>(
 InputTags.displayName = "InputTags";
 
 export { InputTags };
+
