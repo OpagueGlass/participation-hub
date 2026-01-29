@@ -13,7 +13,7 @@ import Link from "next/link";
 import type React from "react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { session, isLoading } = useAuth();
+  const { session, isLoading, isResearcher } = useAuth();
 
   if (isLoading) {
     return (
@@ -38,7 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!session) {
+  if (!session || !isResearcher) {
     return (
       <div className="flex h-[80vh] w-full items-center justify-center">
         <Empty>
