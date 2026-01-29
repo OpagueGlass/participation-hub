@@ -40,7 +40,7 @@ export default function LoginForm({ className, ...props }: React.ComponentProps<
 
   if (session) {
     if (session.user.user_metadata.hasPassword) {
-      redirect("/dashboard");
+      redirect("/callback")
     } else {
       redirect("/signup");
     }
