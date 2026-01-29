@@ -19,12 +19,14 @@ import { useAuth } from "@/context/auth-context";
 import { Session } from "@supabase/supabase-js";
 
 enum AuthState {
+  ADMIN,
   LOGGED_IN_WITH_PASSWORD,
   LOGGED_IN_NO_PASSWORD,
   LOGGED_OUT,
 }
 
 const authStates = [
+  { link: "/admin", Label: "Admin", icon: LayoutDashboard },
   { link: "/dashboard", Label: "Dashboard", icon: LayoutDashboard },
   { link: "/signup", Label: "Sign Up", icon: SquareAsterisk },
   { link: "/login", Label: "Login", icon: LogIn },
@@ -32,18 +34,22 @@ const authStates = [
 
 function ActionButton({
   session,
+  isResearcher,
   label,
   size,
   variant,
 }: {
   session: Session | null;
+  isResearcher: boolean | null;
   label?: string;
   size?: "sm" | "lg";
   variant?: "default" | "secondary";
 }) {
   const currentState = session
     ? session.user.user_metadata.hasPassword
-      ? AuthState.LOGGED_IN_WITH_PASSWORD
+      ? isResearcher
+        ? AuthState.ADMIN
+        : AuthState.LOGGED_IN_WITH_PASSWORD
       : AuthState.LOGGED_IN_NO_PASSWORD
     : AuthState.LOGGED_OUT;
 
@@ -59,7 +65,7 @@ function ActionButton({
 }
 
 export default function Page() {
-  const { session } = useAuth();
+  const { session, isResearcher } = useAuth();
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -76,7 +82,7 @@ export default function Page() {
             <span className="font-semibold text-xl">Epsilon</span>
           </div>
           <div className="flex items-center gap-4">
-            <ActionButton session={session} />
+            <ActionButton session={session} isResearcher={isResearcher} />
           </div>
         </div>
       </header>
@@ -93,7 +99,7 @@ export default function Page() {
               in real-time.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <ActionButton size="lg" session={session} label="Get Started" />
+              <ActionButton size="lg" session={session} isResearcher={isResearcher} label="Get Started" />
               <Button size="lg" variant="outline" asChild>
                 <Link href="/">Learn More</Link>
               </Button>
@@ -201,7 +207,13 @@ export default function Page() {
               {/* <Button size="lg" variant="secondary" asChild> */}
               {/* <Link href="/signup">Create Your Account</Link> */}
               {/* </Button> */}
-              <ActionButton size="lg" variant="secondary" session={session} label="Join Now" />
+              <ActionButton
+                size="lg"
+                variant="secondary"
+                session={session}
+                isResearcher={isResearcher}
+                label="Join Now"
+              />
             </CardContent>
           </Card>
         </section>
