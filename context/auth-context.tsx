@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { AuthError, Session } from "@supabase/supabase-js";
+import { isUserResearcher } from "@/lib/query";
 
 interface AuthContextType {
   session: Session | null;
@@ -10,6 +11,8 @@ interface AuthContextType {
   signUp: (password: string) => Promise<AuthError | null>;
   signIn: (email: string, password: string) => Promise<AuthError | null>;
   signOut: () => Promise<AuthError | null>;
+  isResearcher: boolean;
+  loadIsResearcher: (userId: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -17,11 +20,21 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isResearcher, setIsResearcher] = useState<boolean>(false);
+
+  const loadIsResearcher = async (userId: string) => {
+    const userIsResearcher = await isUserResearcher(userId);
+    setIsResearcher(userIsResearcher);
+    return userIsResearcher;
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       // Checks for an existing session on initial load
       setSession(session);
+      if (session?.user) {
+        await loadIsResearcher(session.user.id);
+      }
       setIsLoading(false);
     });
 
@@ -58,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     setIsLoading(true);
     const { error } = await supabase.auth.signOut();
+    setIsResearcher(false);
     setIsLoading(false);
     return error;
   };
@@ -65,9 +79,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     session,
     isLoading,
+    isResearcher,
     signUp,
     signIn,
     signOut,
+    loadIsResearcher,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
