@@ -8,49 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, FileText, ImageIcon, Plus, Search, Users } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-
-const researchStudies = [
-  {
-    id: "1",
-    title: "Mental Health and Well-being Study",
-    description: "Longitudinal study examining factors affecting mental health in university students.",
-    status: { description: "Active" },
-    participants: 245,
-    images: 12,
-    papers: 2,
-    createdAt: new Date("2023-01-15"),
-  },
-  {
-    id: "2",
-    title: "Sleep Quality and Cognitive Function",
-    description: "Research on the relationship between sleep patterns and cognitive performance.",
-    status: { description: "Active" },
-    participants: 189,
-    images: 8,
-    papers: 1,
-    createdAt: new Date("2023-03-22"),
-  },
-  {
-    id: "3",
-    title: "Diabetes and Depression Correlation",
-    description: "Investigating the link between diabetes management and depressive symptoms.",
-    status: { description: "Completed" },
-    participants: 312,
-    images: 15,
-    papers: 3,
-    createdAt: new Date("2022-09-10"),
-  },
-  {
-    id: "4",
-    title: "Exercise Impact on Mental Health",
-    description: "Studying how regular physical activity affects psychological well-being.",
-    status: { description: "Completed" },
-    participants: 0,
-    images: 0,
-    papers: 0,
-    createdAt: new Date("2024-12-01"),
-  },
-];
+import { getResearcherCollections } from "@/lib/query";
+import { useQuery
+ } from "@tanstack/react-query";
+import { useAuth } from "@/context/auth-context";
 
 const statusOptions = [
   { value: "all", label: "All Status" },
@@ -61,6 +22,15 @@ const statusOptions = [
 export default function ResearchListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState(statusOptions[0].value);
+  const { session } = useAuth();
+
+  const {data: collectionsData} = useQuery({
+    queryKey: ['researcher-collections'],
+    queryFn: () => getResearcherCollections(session!.user.id),
+    enabled: !!session?.user?.id,
+  });
+
+  const researchStudies = collectionsData || [];
 
   return (
     <div className="space-y-6">
