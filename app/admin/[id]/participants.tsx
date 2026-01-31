@@ -12,15 +12,16 @@ import {
 import { InputTags } from "@/components/ui/input-tags";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TabsContent } from "@/components/ui/tabs";
+import { inviteParticipantsToCollection } from "@/lib/query";
 import { Mail, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { FunctionsHttpError } from "@supabase/supabase-js";
 
-function ParticipantsDialog() {
+function ParticipantsDialog({ collectionId }: { collectionId: string }) {
   const [emails, setEmails] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -49,10 +50,26 @@ function ParticipantsDialog() {
             className="flex-10"
             disabled={emails.length === 0}
             onClick={() => {
-              console.log(emails);
               setOpen(false);
-              toast.success(`Invitations sent to ${emails.length} participant${emails.length !== 1 ? "s" : ""}.`);
-              setEmails([]);
+              toast.promise(inviteParticipantsToCollection(collectionId, emails), {
+                loading: "Sending invitations...",
+                success: (res) => {
+                  if (res.error) {
+                    throw res;
+                  }
+                  setEmails([]);
+                  return `Invitations sent to ${res.data.count} participant${res.data.count !== 1 ? "s" : ""}.`;
+                },
+                error: async (res) => {
+                  setOpen(true);
+                  if (res.error instanceof FunctionsHttpError) {
+                    const error = await res.error.context.json();
+                    return `Error sending invitations: ${error.message || "Unknown error"}`;
+                  } else {
+                    return `Error sending invitations: ${res.error?.message || "Unknown error"}`;
+                  }
+                },
+              });
             }}
           >
             <Mail className="mr-2 size-4" />
@@ -64,14 +81,13 @@ function ParticipantsDialog() {
   );
 }
 
-export function ParticipantsTab() {
-  const participants = [
-    { id: "1", email: "john.doe@example.com", consent: true, joinedAt: "Jan 20, 2023" },
-    { id: "2", email: "jane.smith@example.com", consent: true, joinedAt: "Jan 22, 2023" },
-    { id: "3", email: "mike.wilson@example.com", consent: false, joinedAt: "-" },
-    { id: "4", email: "sarah.jones@example.com", consent: true, joinedAt: "Feb 1, 2023" },
-  ];
-
+export function ParticipantsTab({
+  participants,
+  collectionId,
+}: {
+  participants: { id: number; email: string; consent: boolean; joinedAt: Date }[];
+  collectionId: string;
+}) {
   return (
     <TabsContent value="participants" className="space-y-4">
       <Card>
@@ -82,7 +98,7 @@ export function ParticipantsTab() {
               <CardDescription>View and invite participants to your research study</CardDescription>
             </div>
 
-            <ParticipantsDialog />
+            <ParticipantsDialog collectionId={collectionId} />
           </div>
         </CardHeader>
         <CardContent>
@@ -107,7 +123,9 @@ export function ParticipantsTab() {
                         {participant.consent ? "Agreed" : "Revoked"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground py-3">{participant.joinedAt}</TableCell>
+                    <TableCell className="text-muted-foreground py-3">
+                      {participant.joinedAt.toLocaleDateString("en-GB")}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
