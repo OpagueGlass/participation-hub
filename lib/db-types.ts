@@ -153,21 +153,24 @@ export type Database = {
           consent: boolean
           consent_updated_at: string
           id: number
-          profile_id: string
+          joined_at: string
+          profile_id: number
         }
         Insert: {
           collection_id: string
           consent?: boolean
           consent_updated_at?: string
           id?: number
-          profile_id?: string
+          joined_at?: string
+          profile_id: number
         }
         Update: {
           collection_id?: string
           consent?: boolean
           consent_updated_at?: string
           id?: number
-          profile_id?: string
+          joined_at?: string
+          profile_id?: number
         }
         Relationships: [
           {
@@ -177,7 +180,77 @@ export type Database = {
             referencedRelation: "collections"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "profile_collections_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      profiles: {
+        Row: {
+          auth_id: string | null
+          email: string
+          id: number
+        }
+        Insert: {
+          auth_id?: string | null
+          email: string
+          id?: number
+        }
+        Update: {
+          auth_id?: string | null
+          email?: string
+          id?: number
+        }
+        Relationships: []
+      }
+      researcher_collections: {
+        Row: {
+          collection_id: string
+          id: number
+          researcher_id: string
+        }
+        Insert: {
+          collection_id?: string
+          id?: number
+          researcher_id?: string
+        }
+        Update: {
+          collection_id?: string
+          id?: number
+          researcher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "researcher_collections_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "researcher_collections_researcher_id_fkey1"
+            columns: ["researcher_id"]
+            isOneToOne: false
+            referencedRelation: "researchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      researchers: {
+        Row: {
+          id: string
+        }
+        Insert: {
+          id?: string
+        }
+        Update: {
+          id?: string
+        }
+        Relationships: []
       }
       status_types: {
         Row: {
