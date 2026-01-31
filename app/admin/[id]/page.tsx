@@ -4,12 +4,13 @@ import StatCard from "@/components/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getCollectionById } from "@/lib/query";
+import { getCollectionById, getResearchParticipant } from "@/lib/query";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, FileText, ImageIcon, Users } from "lucide-react";
 import { ImagesTab } from "./images";
 import { PapersTab } from "./papers";
 import { ParticipantsTab } from "./participants";
+import { useParams } from "next/navigation";
 
 export default function ResearchDetailPage() {
   const research = {
@@ -27,9 +28,18 @@ export default function ResearchDetailPage() {
     ],
   };
 
+  const params = useParams();
+
   const { data: collection } = useQuery({
-    queryKey: ["collection", "99a71746-36b2-4def-a737-04562f741a24"],
-    queryFn: () => getCollectionById("99a71746-36b2-4def-a737-04562f741a24"),
+    queryKey: ["collection", params.id],
+    queryFn: () => getCollectionById(params.id as string),
+    enabled: !!params.id,
+  });
+
+  const { data: participantsData } = useQuery({
+    queryKey: ["research-participant", params.id],
+    queryFn: () => getResearchParticipant(params.id as string),
+    enabled: !!params.id,
   });
 
   const stats = [
@@ -43,7 +53,9 @@ export default function ResearchDetailPage() {
     {
       label: "Participants",
       value: "participants",
-      content: (index: number) => <ParticipantsTab key={index} />,
+      content: (index: number) => (
+        <ParticipantsTab key={index} participants={participantsData ?? []} collectionId={collection?.id ?? ""} />
+      ),
     },
     {
       label: "Analytics Images",
@@ -53,7 +65,9 @@ export default function ResearchDetailPage() {
     {
       label: "Research Papers",
       value: "papers",
-      content: (index: number) => <PapersTab key={index} papers={collection?.papers ?? []} />,
+      content: (index: number) => (
+        <PapersTab key={index} papers={collection?.papers ?? []} collectionId={collection?.id ?? ""} />
+      ),
     },
   ];
 
