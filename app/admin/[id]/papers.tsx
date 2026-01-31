@@ -26,6 +26,7 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { addPaperToCollection } from "@/lib/query";
 
 const researchPaperSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
@@ -38,7 +39,7 @@ const researchPaperSchema = z.object({
   link: z.httpUrl({ message: "Invalid URL" }),
 });
 
-function PapersDialog() {
+function PapersDialog({ collectionId }: { collectionId: string }) {
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
 
@@ -54,7 +55,15 @@ function PapersDialog() {
     },
   });
 
-  function onSubmit(data: z.infer<typeof researchPaperSchema>) {
+  async function onSubmit(data: z.infer<typeof researchPaperSchema>) {
+    const { error } = await addPaperToCollection(collectionId, {
+      ...data,
+      published_at: data.publishedAt.toISOString(),
+    });
+    if (error) {
+      toast.error(`Error adding research paper: ${error.message}`);
+      return;
+    }
     form.reset();
     setValue("");
     setOpen(false);
@@ -172,7 +181,7 @@ function PapersDialog() {
   );
 }
 
-export function PapersTab({ papers }: { papers: ResearchPaper[] }) {
+export function PapersTab({ papers, collectionId }: { papers: ResearchPaper[]; collectionId: string }) {
   return (
     <TabsContent value="papers" className="space-y-4">
       <Card>
@@ -182,7 +191,7 @@ export function PapersTab({ papers }: { papers: ResearchPaper[] }) {
               <CardTitle>Research Papers</CardTitle>
               <CardDescription>Add and manage published papers from this research study.</CardDescription>
             </div>
-            <PapersDialog />
+            <PapersDialog collectionId={collectionId}/>
           </div>
         </CardHeader>
         <CardContent>
