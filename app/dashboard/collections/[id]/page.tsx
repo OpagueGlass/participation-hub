@@ -262,7 +262,7 @@ function ConsentTab({ profileId, collectionId }: { profileId: string; collection
                   variant="destructive"
                   className="flex-1"
                   onClick={async () => {
-                    await updateConsent(profileId, collectionId, false);
+                    await updateConsent(consent.id, collectionId, false);
                     toast.success("Consent revoked successfully.");
                     refetch();
                   }}
