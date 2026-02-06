@@ -39,7 +39,7 @@ const researchPaperSchema = z.object({
   link: z.httpUrl({ message: "Invalid URL" }),
 });
 
-function PapersDialog({ collectionId }: { collectionId: string }) {
+function PapersDialog({ collectionId, refetch }: { collectionId: string; refetch: () => void }) {
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
 
@@ -56,18 +56,29 @@ function PapersDialog({ collectionId }: { collectionId: string }) {
   });
 
   async function onSubmit(data: z.infer<typeof researchPaperSchema>) {
-    const { error } = await addPaperToCollection(collectionId, {
-      ...data,
-      published_at: data.publishedAt.toISOString(),
-    });
-    if (error) {
-      toast.error(`Error adding research paper: ${error.message}`);
-      return;
-    }
-    form.reset();
-    setValue("");
-    setOpen(false);
-    toast.success("Research paper added successfully!");
+    toast.promise(
+      addPaperToCollection(collectionId, {
+        ...data,
+        published_at: data.publishedAt.toISOString(),
+      }),
+      {
+        loading: "Adding research paper...",
+        success: ({ error }) => {
+          if (error) {
+            throw error;
+          }
+          refetch();
+          form.reset();
+          setValue("");
+          setOpen(false);
+          return "Research paper added successfully!";
+        },
+        error: ({ error }) => {
+          setOpen(true);
+          return `Error adding research paper: ${error.message || "Unknown error"}`;
+        },
+      },
+    );
   }
 
   return (
@@ -181,7 +192,15 @@ function PapersDialog({ collectionId }: { collectionId: string }) {
   );
 }
 
-export function PapersTab({ papers, collectionId }: { papers: ResearchPaper[]; collectionId: string }) {
+export function PapersTab({
+  papers,
+  collectionId,
+  refetch,
+}: {
+  papers: ResearchPaper[];
+  collectionId: string;
+  refetch: () => void;
+}) {
   return (
     <TabsContent value="papers" className="space-y-4">
       <Card>
@@ -191,7 +210,7 @@ export function PapersTab({ papers, collectionId }: { papers: ResearchPaper[]; c
               <CardTitle>Research Papers</CardTitle>
               <CardDescription>Add and manage published papers from this research study.</CardDescription>
             </div>
-            <PapersDialog collectionId={collectionId}/>
+            <PapersDialog collectionId={collectionId} refetch={refetch} />
           </div>
         </CardHeader>
         <CardContent>

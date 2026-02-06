@@ -8,7 +8,7 @@ import { ImageZoom } from "@/components/ui/image-zoom";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/auth-context";
-import { getCollectionById, getConsent, ResearchPaper, updateConsent } from "@/lib/query";
+import { CollectionImage, getCollectionById, getConsent, ResearchPaper, updateConsent } from "@/lib/query";
 import { useQuery } from "@tanstack/react-query";
 import { BookMarked, Calendar, CheckCircle, ExternalLink, ImageIcon, Shield, Users, XCircle } from "lucide-react";
 import Image from "next/image";
@@ -17,18 +17,11 @@ import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import StatCard from "@/components/stat-card";
 
-interface AnalyticsImage {
-  id: number;
-  title: string;
-  url: string;
-  description: string;
-}
-
 function AnalyticsTab({
   analyticsImages,
   researchPapers,
 }: {
-  analyticsImages: AnalyticsImage[];
+  analyticsImages: CollectionImage[];
   researchPapers: ResearchPaper[];
 }) {
   return (
@@ -306,27 +299,6 @@ export default function CollectionDetailPage() {
     queryFn: () => getCollectionById(params.id as string),
   });
 
-  const analyticsImages = [
-    {
-      id: 1,
-      title: "Response Rate Trends",
-      url: "/1.png",
-      description: "Your participation trends over the past 6 months",
-    },
-    {
-      id: 2,
-      title: "Data Quality Metrics",
-      url: "/2.png",
-      description: "Quality assessment of your submitted data",
-    },
-    {
-      id: 3,
-      title: "Engagement Patterns",
-      url: "/3.webp",
-      description: "Your most active participation times",
-    },
-  ];
-
   if (!collection) {
     return (
       <div className="flex flex-col items-center justify-center h-96">
@@ -340,7 +312,7 @@ export default function CollectionDetailPage() {
       value: "analytics",
       label: "Analytics",
       content: (index: number) => (
-        <AnalyticsTab analyticsImages={analyticsImages} researchPapers={collection!.papers} key={index} />
+        <AnalyticsTab analyticsImages={collection!.images} researchPapers={collection!.papers} key={index} />
       ),
     },
     {

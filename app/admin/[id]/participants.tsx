@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 
-function ParticipantsDialog({ collectionId }: { collectionId: string }) {
+function ParticipantsDialog({ collectionId, refetchParticipants }: { collectionId: string; refetchParticipants: () => void }) {
   const [emails, setEmails] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   return (
@@ -58,6 +58,7 @@ function ParticipantsDialog({ collectionId }: { collectionId: string }) {
                     throw res;
                   }
                   setEmails([]);
+                  refetchParticipants();
                   return `Invitations sent to ${res.data.count} participant${res.data.count !== 1 ? "s" : ""}.`;
                 },
                 error: async (res) => {
@@ -84,9 +85,11 @@ function ParticipantsDialog({ collectionId }: { collectionId: string }) {
 export function ParticipantsTab({
   participants,
   collectionId,
+  refetchParticipants,
 }: {
   participants: { id: number; email: string; consent: boolean; joinedAt: Date }[];
   collectionId: string;
+  refetchParticipants: () => void;
 }) {
   return (
     <TabsContent value="participants" className="space-y-4">
@@ -98,7 +101,7 @@ export function ParticipantsTab({
               <CardDescription>View and invite participants to your research study</CardDescription>
             </div>
 
-            <ParticipantsDialog collectionId={collectionId} />
+            <ParticipantsDialog collectionId={collectionId} refetchParticipants={refetchParticipants} />
           </div>
         </CardHeader>
         <CardContent>

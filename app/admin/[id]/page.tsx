@@ -30,13 +30,13 @@ export default function ResearchDetailPage() {
 
   const params = useParams();
 
-  const { data: collection } = useQuery({
+  const { data: collection, refetch } = useQuery({
     queryKey: ["collection", params.id],
     queryFn: () => getCollectionById(params.id as string),
     enabled: !!params.id,
   });
 
-  const { data: participantsData } = useQuery({
+  const { data: participantsData, refetch: refetchParticipants } = useQuery({
     queryKey: ["research-participant", params.id],
     queryFn: () => getResearchParticipant(params.id as string),
     enabled: !!params.id,
@@ -44,7 +44,7 @@ export default function ResearchDetailPage() {
 
   const stats = [
     { title: "Participants", value: research.participants.length, icon: Users },
-    { title: "Images", value: 3, icon: ImageIcon },
+    { title: "Images", value: collection?.images?.length ?? 0, icon: ImageIcon },
     { title: "Papers", value: collection?.papers?.length ?? 0, icon: FileText },
     { title: "Created", value: research.createdAt, icon: Calendar },
   ];
@@ -54,19 +54,19 @@ export default function ResearchDetailPage() {
       label: "Participants",
       value: "participants",
       content: (index: number) => (
-        <ParticipantsTab key={index} participants={participantsData ?? []} collectionId={collection?.id ?? ""} />
+        <ParticipantsTab key={index} participants={participantsData ?? []} collectionId={collection?.id ?? ""} refetchParticipants={refetchParticipants} />
       ),
     },
     {
       label: "Analytics Images",
       value: "images",
-      content: (index: number) => <ImagesTab key={index} />,
+      content: (index: number) => <ImagesTab key={index} images={collection?.images ?? []} collectionId={collection?.id ?? ""} refetch={refetch} />,
     },
     {
       label: "Research Papers",
       value: "papers",
       content: (index: number) => (
-        <PapersTab key={index} papers={collection?.papers ?? []} collectionId={collection?.id ?? ""} />
+        <PapersTab key={index} papers={collection?.papers ?? []} collectionId={collection?.id ?? ""} refetch={refetch} />
       ),
     },
   ];
