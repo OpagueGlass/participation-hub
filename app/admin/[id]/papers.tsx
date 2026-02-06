@@ -20,13 +20,14 @@ import { TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { ResearchPaper } from "@/lib/query";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BookMarked, Edit, ExternalLink, Plus, Trash2 } from "lucide-react";
+import { BookMarked, Edit, ExternalLink, MoreVertical, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { addPaperToCollection } from "@/lib/query";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const researchPaperSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
@@ -219,7 +220,7 @@ export function PapersTab({
               papers.map((paper) => (
                 <div
                   key={paper.id}
-                  className="relative p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                  className="relative p-4 border border-border rounded-lg transition-colors"
                 >
                   <div className="flex flex-row items-center mb-1 gap-2 justify-between align-top">
                     <h4 className="font-semibold">{paper.title}</h4>
@@ -231,12 +232,23 @@ export function PapersTab({
                           day: "numeric",
                         })}
                       </Badge>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <Edit className="size-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <Trash2 className="size-4" />
-                      </Button>
+                      <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon-sm" className="size-5 rounded-full">
+                          <MoreVertical className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Edit className="mr-2 size-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Trash2 className="mr-2 size-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground mb-0.5 font-semibold">{paper.authors}</p>

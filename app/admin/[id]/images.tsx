@@ -8,6 +8,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -16,7 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { addImageToCollection, CollectionImage } from "@/lib/query";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Edit, ImageIcon, Scroll, Trash2, Upload, UploadIcon, X } from "lucide-react";
+import { Edit, ImageIcon, MoreVertical, Scroll, Trash2, Upload, UploadIcon, X } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -233,13 +239,13 @@ export function ImagesTab({ images, collectionId, refetch }: { images: Collectio
               <CardTitle>Analytics Images</CardTitle>
               <CardDescription>Upload and manage analytics visualizations for participants.</CardDescription>
             </div>
-            <ImagesDialog collectionId={collectionId} />
+            <ImagesDialog collectionId={collectionId} refetch={refetch} />
           </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {images.map((image) => (
-              <Card key={image.id}>
+              <Card key={image.id} className="py-0 gap-0">
                 {/* <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center"> */}
                 <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-border/30 bg-muted/10 max-h-[500px]">
                   {/* <ImageIcon className="size-12 text-muted-foreground" /> */}
@@ -247,27 +253,38 @@ export function ImagesTab({ images, collectionId, refetch }: { images: Collectio
                     <Image
                       src={image.url}
                       alt={image.title}
-                      className="object-cover rounded-t-lg w-full h-full"
+                      // className="object-cover rounded-t-lg w-full h-full"
                       fill
-                      objectFit="contain"
                       priority
                       unoptimized
                     />
                   </ImageZoom>
                 </div>
-                <CardContent className="p-4">
-                  <h4 className="font-semibold">{image.title}</h4>
-                  <p className="text-sm text-muted-foreground mt-1">{image.description}</p>
-                  {/* <p className="text-xs text-muted-foreground mt-2">Uploaded: {image.uploadedAt}</p> */}
-                  <div className="flex gap-2 mt-3">
-                    <Button variant="outline" size="sm" className="flex-1 bg-transparent">
-                      <Edit className="mr-2 size-3" />
-                      Edit
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <Trash2 className="size-4" />
-                    </Button>
+                <CardContent className="p-4 flex flex-col flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <h4 className="font-semibold">{image.title}</h4>
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{image.description}</p>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon-sm" className="size-5 rounded-full">
+                          <MoreVertical className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Edit className="mr-2 size-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Trash2 className="mr-2 size-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
+                  {/* <p className="text-xs text-muted-foreground mt-2">Uploaded: {image.uploadedAt}</p> */}
                 </CardContent>
               </Card>
             ))}
