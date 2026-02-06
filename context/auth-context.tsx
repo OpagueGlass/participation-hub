@@ -28,22 +28,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return userIsResearcher;
   };
 
+  const updateSession = async (session: Session | null) => {
+    setSession(session);
+    if (session?.user) {
+      await loadIsResearcher(session.user.id);
+    }
+    setIsLoading(false);
+  };
+
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       // Checks for an existing session on initial load
-      setSession(session);
-      if (session?.user) {
-        await loadIsResearcher(session.user.id);
-      }
-      setIsLoading(false);
+      updateSession(session);
     });
 
     // Listens for changes to auth state
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      setIsLoading(false);
+    } = supabase.auth.onAuthStateChange((_, session) => {
+      updateSession(session);
     });
 
     return () => subscription.unsubscribe();
