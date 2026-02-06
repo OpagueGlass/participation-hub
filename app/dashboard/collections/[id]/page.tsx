@@ -40,7 +40,16 @@ function AnalyticsTab({
                     <div className="space-y-3 lg:px-16">
                       <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-border/30 bg-muted/10 max-h-[500px]">
                         <ImageZoom className="h-full" zoomMargin={48}>
-                          <Image src={image.url} alt={image.title} fill objectFit="contain" priority unoptimized />
+                          <div className="absolute h-full w-full">
+                            <Image
+                              src={image.url}
+                              alt={image.title}
+                              fill
+                              priority
+                              unoptimized
+                              className="object-contain"
+                            />
+                          </div>
                         </ImageZoom>
                       </div>
                     </div>
@@ -327,15 +336,15 @@ export default function CollectionDetailPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between">
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight">{collection!.title}</h1>
-            <p className="text-muted-foreground">{collection!.description}</p>
           </div>
           <Badge variant={collection!.status?.description === "Active" ? "default" : "secondary"} className="shrink-0">
             {collection!.status?.description}
           </Badge>
         </div>
+        <p className="text-muted-foreground">{collection!.description}</p>
       </div>
 
       <div className="grid gap-6 sm:grid-cols-[1.5fr_1fr] mb-8">

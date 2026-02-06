@@ -13,21 +13,6 @@ import { ParticipantsTab } from "./participants";
 import { useParams } from "next/navigation";
 
 export default function ResearchDetailPage() {
-  const research = {
-    id: 1,
-    title: "Mental Health and Well-being Study",
-    description:
-      "Longitudinal study examining factors affecting mental health in university students. This research aims to identify key predictors of mental well-being and develop targeted intervention strategies.",
-    status: "Active",
-    createdAt: "Jan 15, 2023",
-    participants: [
-      { id: "1", email: "john.doe@example.com", status: "Active", joinedAt: "Jan 20, 2023" },
-      { id: "2", email: "jane.smith@example.com", status: "Active", joinedAt: "Jan 22, 2023" },
-      { id: "3", email: "mike.wilson@example.com", status: "Pending", joinedAt: "-" },
-      { id: "4", email: "sarah.jones@example.com", status: "Active", joinedAt: "Feb 1, 2023" },
-    ],
-  };
-
   const params = useParams();
 
   const { data: collection, refetch } = useQuery({
@@ -43,10 +28,18 @@ export default function ResearchDetailPage() {
   });
 
   const stats = [
-    { title: "Participants", value: research.participants.length, icon: Users },
+    { title: "Participants", value: participantsData?.length ?? 0, icon: Users },
     { title: "Images", value: collection?.images?.length ?? 0, icon: ImageIcon },
     { title: "Papers", value: collection?.papers?.length ?? 0, icon: FileText },
-    { title: "Created", value: research.createdAt, icon: Calendar },
+    {
+      title: "Created",
+      value: new Date(collection?.createdAt ?? "").toLocaleDateString([], {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+      icon: Calendar,
+    },
   ];
 
   const tabs = [
@@ -54,19 +47,36 @@ export default function ResearchDetailPage() {
       label: "Participants",
       value: "participants",
       content: (index: number) => (
-        <ParticipantsTab key={index} participants={participantsData ?? []} collectionId={collection?.id ?? ""} refetchParticipants={refetchParticipants} />
+        <ParticipantsTab
+          key={index}
+          participants={participantsData ?? []}
+          collectionId={collection?.id ?? ""}
+          refetchParticipants={refetchParticipants}
+        />
       ),
     },
     {
       label: "Analytics Images",
       value: "images",
-      content: (index: number) => <ImagesTab key={index} images={collection?.images ?? []} collectionId={collection?.id ?? ""} refetch={refetch} />,
+      content: (index: number) => (
+        <ImagesTab
+          key={index}
+          images={collection?.images ?? []}
+          collectionId={collection?.id ?? ""}
+          refetch={refetch}
+        />
+      ),
     },
     {
       label: "Research Papers",
       value: "papers",
       content: (index: number) => (
-        <PapersTab key={index} papers={collection?.papers ?? []} collectionId={collection?.id ?? ""} refetch={refetch} />
+        <PapersTab
+          key={index}
+          papers={collection?.papers ?? []}
+          collectionId={collection?.id ?? ""}
+          refetch={refetch}
+        />
       ),
     },
   ];
@@ -85,12 +95,12 @@ export default function ResearchDetailPage() {
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight">{collection!.title}</h1>
-            <p className="text-muted-foreground">{collection!.description}</p>
           </div>
           <Badge variant={collection!.status?.description === "Active" ? "default" : "secondary"} className="shrink-0">
             {collection!.status?.description}
           </Badge>
         </div>
+        <p className="text-muted-foreground">{collection!.description}</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">

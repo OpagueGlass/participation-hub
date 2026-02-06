@@ -37,7 +37,7 @@ const uploadImageSchema = z.object({
 
 type UploadImageFormData = z.infer<typeof uploadImageSchema>;
 
-function ImagesDialog({ collectionId, refetch }: { collectionId: string, refetch: () => void }) {
+function ImagesDialog({ collectionId, refetch }: { collectionId: string; refetch: () => void }) {
   const [isDragging, setIsDragging] = useState(false);
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -229,7 +229,15 @@ function ImagesDialog({ collectionId, refetch }: { collectionId: string, refetch
   );
 }
 
-export function ImagesTab({ images, collectionId, refetch }: { images: CollectionImage[]; collectionId: string, refetch: () => void }) {
+export function ImagesTab({
+  images,
+  collectionId,
+  refetch,
+}: {
+  images: CollectionImage[];
+  collectionId: string;
+  refetch: () => void;
+}) {
   return (
     <TabsContent value="images" className="space-y-4">
       <Card>
@@ -250,14 +258,15 @@ export function ImagesTab({ images, collectionId, refetch }: { images: Collectio
                 <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-border/30 bg-muted/10 max-h-[500px]">
                   {/* <ImageIcon className="size-12 text-muted-foreground" /> */}
                   <ImageZoom className="h-full" zoomMargin={48}>
-                    <Image
-                      src={image.url}
-                      alt={image.title}
-                      // className="object-cover rounded-t-lg w-full h-full"
-                      fill
-                      priority
-                      unoptimized
-                    />
+                    <div className="absolute w-full h-full">
+                      <Image
+                        src={image.url}
+                        alt={image.title}
+                        fill
+                        priority
+                        unoptimized
+                      />
+                    </div>
                   </ImageZoom>
                 </div>
                 <CardContent className="p-4 flex flex-col flex-1">
