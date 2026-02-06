@@ -43,23 +43,23 @@ export type Database = {
         Row: {
           collection_id: string
           description: string
+          filename: string
           id: number
           title: string
-          url: string
         }
         Insert: {
           collection_id?: string
           description: string
+          filename: string
           id?: number
           title: string
-          url: string
         }
         Update: {
           collection_id?: string
           description?: string
+          filename?: string
           id?: number
           title?: string
-          url?: string
         }
         Relationships: [
           {
