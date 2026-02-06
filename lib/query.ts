@@ -1,8 +1,8 @@
 import { supabase } from "./supabase";
 import { Tables } from "./db-types";
 
-
 export type ResearchPaper = ReturnType<typeof convertToPapers>;
+export type CollectionImage = ReturnType<typeof convertToImages>;
 
 const convertToCollection = (data: Omit<Tables<"collections">, "status"> & { status: Tables<"status_types"> }) => {
   const { created_at, ...rest } = data;
@@ -15,8 +15,9 @@ const convertToPapers = (data: Tables<"collection_papers">) => {
 };
 
 const convertToImages = (data: Tables<"collection_images">) => {
-  const { collection_id, ...rest } = data;
-  return { ...rest };
+  const { collection_id, filename, ...rest } = data;
+  const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/collection_image_file/${collection_id}/${filename}`;
+  return { ...rest, url };
 };
 
 const convertToConsent = (data: {
@@ -233,5 +234,32 @@ export const inviteParticipantsToCollection = async (collection_id: string, emai
     body: { collection_id, emails },
   });
 
-  return { data, error }
+  return { data, error };
 };
+
+export async function addImageToCollection(
+  collection_id: string,
+  image: {
+    title: string;
+    description: string;
+    imageFile: File;
+  },
+) {
+  const { title, description, imageFile } = image;
+  const { error: storageError } = await supabase.storage
+    .from("collection_image_file")
+    .upload(`${collection_id}/${imageFile.name}`, imageFile);
+
+  if (storageError) {
+    return storageError;
+  }
+
+  const { error } = await supabase.from("collection_images").insert({
+    title,
+    description,
+    collection_id,
+    filename: imageFile.name,
+  });
+
+  return error;
+}
