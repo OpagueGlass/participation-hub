@@ -1,12 +1,21 @@
 "use client";
-import Link from "next/link";
+import StatCard from "@/components/stat-card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, MessageCircle, LogOut, Users, Calendar } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
-import { getQuickStats, getUserCollections } from "@/lib/query";
 import { useAuth } from "@/context/auth-context";
+import { getQuickStats, getUserCollections } from "@/lib/query";
+import { useQuery } from "@tanstack/react-query";
+import {
+  BookCheck,
+  BookText,
+  CircleUser,
+  MessageCircle,
+  Shield,
+  SquarePen,
+  Users
+} from "lucide-react";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const { session } = useAuth();
@@ -30,30 +39,16 @@ export default function DashboardPage() {
         <p className="text-muted-foreground">Manage your research participation and explore your data contributions</p>
       </div>
 
-      <div className="mb-8">
-        <Card className="border border-primary/20">
-          <CardHeader>
-            <CardTitle>Quick Stats</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Active Studies</p>
-                <p className="text-2xl font-bold text-foreground">{quickStats?.activeCollections || 0}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Total Studies</p>
-                <p className="text-2xl font-bold text-foreground">{quickStats?.totalCollections || 0}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Member Since</p>
-                <p className="text-2xl font-bold text-foreground">
-                  {new Date(session!.user.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long" })}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div>
+        <div className="grid gap-4 md:grid-cols-[1.5fr_1fr_1fr]">
+          <StatCard title="Active Studies" value={quickStats?.activeCollections || 0} icon={BookText} />
+          <StatCard title="Total Studies" value={quickStats?.totalCollections || 0} icon={BookCheck} />
+          <StatCard
+            title="Member Since"
+            value={new Date(session!.user.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long" })}
+            icon={CircleUser}
+          />
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -67,7 +62,7 @@ export default function DashboardPage() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {collectionsData?.map((collection) => (
             <Link href={`/dashboard/collections/${collection.id}`} key={collection.id} className="block h-full">
-              <Card className="hover:shadow-lg transition-shadow h-full flex flex-col">
+              <Card className="hover:shadow-lg hover:bg-muted/50 transition-shadow h-full flex flex-col">
                 <CardHeader className="flex-1">
                   <div className="flex items-start justify-between mb-2">
                     <CardTitle className="text-lg leading-tight">{collection.title}</CardTitle>
@@ -85,7 +80,7 @@ export default function DashboardPage() {
                       </div> */}
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        <Calendar className="size-4 text-muted-foreground" />
+                        <SquarePen className="size-4 text-muted-foreground" />
                         <span className="text-muted-foreground">Created</span>
                       </div>
                       <span className="font-semibold">{collection.createdAt.toLocaleDateString()}</span>

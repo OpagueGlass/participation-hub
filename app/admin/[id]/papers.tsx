@@ -12,22 +12,26 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { ResearchPaper } from "@/lib/query";
+import { addPaperToCollection, ResearchPaper } from "@/lib/query";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BookMarked, Edit, ExternalLink, MoreVertical, Plus, Trash2 } from "lucide-react";
+import { BookMarked, Edit, ExternalLink, FilePlus, MoreVertical, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { addPaperToCollection } from "@/lib/query";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const researchPaperSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
@@ -86,7 +90,7 @@ function PapersDialog({ collectionId, refetch }: { collectionId: string; refetch
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="mr-2 size-4" />
+          <FilePlus className="mr-2 size-4" />
           Add Paper
         </Button>
       </DialogTrigger>
@@ -218,10 +222,7 @@ export function PapersTab({
           <div className="space-y-4">
             {papers.length > 0 ? (
               papers.map((paper) => (
-                <div
-                  key={paper.id}
-                  className="relative p-4 border border-border rounded-lg transition-colors"
-                >
+                <div key={paper.id} className="relative p-4 border border-border rounded-lg transition-colors">
                   <div className="flex flex-row items-center mb-1 gap-2 justify-between align-top">
                     <h4 className="font-semibold">{paper.title}</h4>
                     <div className="flex items-center gap-2 shrink-0">
@@ -233,29 +234,29 @@ export function PapersTab({
                         })}
                       </Badge>
                       <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon-sm" className="size-5 rounded-full">
-                          <MoreVertical className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 size-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Trash2 className="mr-2 size-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon-sm" className="size-5 rounded-full">
+                            <MoreVertical className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Edit className="mr-2 size-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Trash2 className="mr-2 size-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground mb-0.5 font-semibold">{paper.authors}</p>
                   <p className="text-xs text-muted-foreground mb-2 italic">{paper.journal}</p>
                   <p className="text-sm text-muted-foreground mb-3">{paper.description}</p>
 
-                  <Button size="sm" asChild>
+                  <Button size="sm" asChild variant="secondary">
                     <Link href={paper.link} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="mr-1 size-4" />
                       Read Full Paper

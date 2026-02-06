@@ -5,13 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, FileText, ImageIcon, Plus, Search, Users } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
+import { getResearcherCollections } from "@/lib/query";
+import { useQuery } from "@tanstack/react-query";
+import { FileText, ImageIcon, Plus, Search, SquarePen, Users } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { getResearcherCollections } from "@/lib/query";
-import { useQuery
- } from "@tanstack/react-query";
-import { useAuth } from "@/context/auth-context";
 
 const statusOptions = [
   { value: "all", label: "All Status" },
@@ -24,8 +23,8 @@ export default function ResearchListPage() {
   const [statusFilter, setStatusFilter] = useState(statusOptions[0].value);
   const { session } = useAuth();
 
-  const {data: collectionsData} = useQuery({
-    queryKey: ['researcher-collections'],
+  const { data: collectionsData } = useQuery({
+    queryKey: ["researcher-collections"],
     queryFn: () => getResearcherCollections(session!.user.id),
     enabled: !!session?.user?.id,
   });
@@ -76,8 +75,7 @@ export default function ResearchListPage() {
           .filter(
             (collection) =>
               collection.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-              (statusFilter === statusOptions[0].value ||
-                collection.status.description.toLowerCase() === statusFilter),
+              (statusFilter === statusOptions[0].value || collection.status.description.toLowerCase() === statusFilter),
           )
           .map((collection) => (
             <Link href={`/admin/${collection.id}`} key={collection.id} className="block">
@@ -108,7 +106,7 @@ export default function ResearchListPage() {
                       <span>{collection.papers} papers</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Calendar className="size-4" />
+                      <SquarePen className="size-4" />
                       <span>Created {collection.createdAt.toLocaleDateString()}</span>
                     </div>
                   </div>

@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { ImageZoom } from "@/components/ui/image-zoom";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TabsContent } from "@/components/ui/tabs";
@@ -22,13 +23,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { addImageToCollection, CollectionImage } from "@/lib/query";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Edit, ImageIcon, MoreVertical, Scroll, Trash2, Upload, UploadIcon, X } from "lucide-react";
+import { Edit, ImagePlus, MoreVertical, Trash2, Upload, UploadIcon, X } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { set, z } from "zod";
-import Image from "next/image";
-import { ImageZoom } from "@/components/ui/image-zoom";
+import { z } from "zod";
 
 const uploadImageSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
@@ -131,7 +131,7 @@ function ImagesDialog({ collectionId, refetch }: { collectionId: string; refetch
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <Upload className="mr-2 size-4" />
+          <ImagePlus className="mr-2 size-4" />
           Upload Image
         </Button>
       </DialogTrigger>
@@ -259,13 +259,7 @@ export function ImagesTab({
                   {/* <ImageIcon className="size-12 text-muted-foreground" /> */}
                   <ImageZoom className="h-full" zoomMargin={48}>
                     <div className="absolute w-full h-full">
-                      <Image
-                        src={image.url}
-                        alt={image.title}
-                        fill
-                        priority
-                        unoptimized
-                      />
+                      <Image src={image.url} alt={image.title} fill priority unoptimized />
                     </div>
                   </ImageZoom>
                 </div>

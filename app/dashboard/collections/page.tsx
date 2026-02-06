@@ -1,13 +1,13 @@
 "use client";
 
-import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Database, Users } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/context/auth-context";
 import { getUserCollections } from "@/lib/query";
+import { useQuery } from "@tanstack/react-query";
+import { Database, SquarePen, Users } from "lucide-react";
+import Link from "next/link";
 
 export default function CollectionsPage() {
   const { session } = useAuth();
@@ -48,7 +48,7 @@ export default function CollectionsPage() {
               <CardContent>
                 <div className="flex items-center gap-6 mb-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
-                    <Calendar className="size-4" />
+                    <SquarePen className="size-4" />
                     <span>Created {collection.createdAt.toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center gap-2">

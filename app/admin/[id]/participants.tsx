@@ -13,20 +13,26 @@ import { InputTags } from "@/components/ui/input-tags";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TabsContent } from "@/components/ui/tabs";
 import { inviteParticipantsToCollection } from "@/lib/query";
-import { Mail, Plus, X } from "lucide-react";
+import { FunctionsHttpError } from "@supabase/supabase-js";
+import { Mail, UserRoundPlus, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { FunctionsHttpError } from "@supabase/supabase-js";
 
-function ParticipantsDialog({ collectionId, refetchParticipants }: { collectionId: string; refetchParticipants: () => void }) {
+function ParticipantsDialog({
+  collectionId,
+  refetchParticipants,
+}: {
+  collectionId: string;
+  refetchParticipants: () => void;
+}) {
   const [emails, setEmails] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="mr-2 size-4" />
+          <UserRoundPlus className="mr-2 size-4" />
           Invite
         </Button>
       </DialogTrigger>

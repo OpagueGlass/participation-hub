@@ -1,4 +1,5 @@
 "use client";
+import StatCard from "@/components/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,12 +11,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/auth-context";
 import { CollectionImage, getCollectionById, getConsent, ResearchPaper, updateConsent } from "@/lib/query";
 import { useQuery } from "@tanstack/react-query";
-import { BookMarked, Calendar, CheckCircle, ExternalLink, ImageIcon, Shield, Users, XCircle } from "lucide-react";
+import {
+  BookMarked,
+  CheckCircle,
+  ExternalLink,
+  ImageIcon,
+  Shield,
+  SquarePen,
+  Users,
+  XCircle
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import StatCard from "@/components/stat-card";
 
 function AnalyticsTab({
   analyticsImages,
@@ -357,7 +366,7 @@ export default function CollectionDetailPage() {
             month: "long",
             day: "numeric",
           })}
-          icon={Calendar}
+          icon={SquarePen}
         />
 
         {/* <Card>

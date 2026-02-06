@@ -6,11 +6,11 @@ import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getCollectionById, getResearchParticipant } from "@/lib/query";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, FileText, ImageIcon, Users } from "lucide-react";
+import { FileText, ImageIcon, SquarePen, Users } from "lucide-react";
+import { useParams } from "next/navigation";
 import { ImagesTab } from "./images";
 import { PapersTab } from "./papers";
 import { ParticipantsTab } from "./participants";
-import { useParams } from "next/navigation";
 
 export default function ResearchDetailPage() {
   const params = useParams();
@@ -38,7 +38,7 @@ export default function ResearchDetailPage() {
         month: "long",
         day: "numeric",
       }),
-      icon: Calendar,
+      icon: SquarePen,
     },
   ];
 
