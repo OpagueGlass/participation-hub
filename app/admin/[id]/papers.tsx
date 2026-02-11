@@ -104,7 +104,7 @@ function PapersDialog({
       authors: paper?.authors || "",
       journal: paper?.journal || "",
       description: paper?.description || "",
-      publishedAt: paper?.publishedAt || undefined,
+      publishedAt: paper?.publishedAt,
       link: paper?.link || "",
     },
   });
