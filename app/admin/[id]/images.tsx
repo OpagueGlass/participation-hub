@@ -1,3 +1,13 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,25 +26,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { addImageToCollection, CollectionImage, deleteImageFromCollection, updateImageInCollection } from "@/lib/query";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PostgrestError } from "@supabase/supabase-js";
 import { StorageError } from "@supabase/storage-js";
-import { Edit, ImagePlus, MoreVertical, Trash, Trash2, Upload, UploadIcon, X } from "lucide-react";
+import { PostgrestError } from "@supabase/supabase-js";
+import { Edit, ImagePlus, MoreVertical, Trash2, Upload, UploadIcon, X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { set, z } from "zod";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { ref } from "process";
+import { z } from "zod";
 
 const uploadImageSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),

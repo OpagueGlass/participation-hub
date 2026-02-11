@@ -31,7 +31,7 @@ export default function SignUpForm({ className, ...props }: React.ComponentProps
 
   const form = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: {
+    values: {
       password: "",
       confirmPassword: "",
     },

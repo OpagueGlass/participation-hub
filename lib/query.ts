@@ -205,30 +205,6 @@ export async function getResearchParticipant(collection_id: string) {
   }));
 }
 
-export async function addPaperToCollection(
-  collection_id: string,
-  paper: {
-    title: string;
-    authors: string;
-    journal: string;
-    description: string;
-    published_at: string;
-    link: string;
-  },
-) {
-  const { title, authors, journal, description, published_at, link } = paper;
-  const { error } = await supabase.from("collection_papers").insert({
-    collection_id,
-    title,
-    authors,
-    journal,
-    description,
-    published_at,
-    link,
-  });
-  return { error };
-}
-
 export const inviteParticipantsToCollection = async (collection_id: string, emails: string[]) => {
   const { data, error } = await supabase.functions.invoke("invite-participants", {
     body: { collection_id, emails },
@@ -305,5 +281,53 @@ export async function deleteImageFromCollection(image: CollectionImage) {
     return storageError;
   }
   const { error } = await supabase.from("collection_images").delete().eq("id", image.id);
+  return error;
+}
+
+export async function addPaperToCollection(
+  collection_id: string,
+  paper: {
+    title: string;
+    authors: string;
+    journal: string;
+    description: string;
+    publishedAt: string;
+    link: string;
+  },
+) {
+  const { title, authors, journal, description, publishedAt, link } = paper;
+  const { error } = await supabase.from("collection_papers").insert({
+    collection_id,
+    title,
+    authors,
+    journal,
+    description,
+    published_at: publishedAt,
+    link,
+  });
+  return error;
+}
+
+export async function updatePaperInCollection(
+  paper_id: number,
+  paper: Partial<{
+    title: string;
+    authors: string;
+    journal: string;
+    description: string;
+    publishedAt: string;
+    link: string;
+  }>,
+) {
+  const { publishedAt, ...rest } = paper;
+  const { error } = await supabase
+    .from("collection_papers")
+    .update({ ...rest, published_at: publishedAt })
+    .eq("id", paper_id);
+  return error;
+}
+
+export async function deletePaperFromCollection(paper_id: number) {
+  const { error } = await supabase.from("collection_papers").delete().eq("id", paper_id);
   return error;
 }

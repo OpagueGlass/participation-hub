@@ -25,7 +25,7 @@ export default function LoginForm({ className, ...props }: React.ComponentProps<
 
   const form = useForm<FormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
+    values: {
       email: "",
       password: "",
     },

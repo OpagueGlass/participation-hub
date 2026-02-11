@@ -4,14 +4,7 @@ import { DatePickerInput } from "@/components/date-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,14 +17,32 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { addPaperToCollection, ResearchPaper } from "@/lib/query";
+import {
+  addPaperToCollection,
+  CollectionImage,
+  deletePaperFromCollection,
+  ResearchPaper,
+  updatePaperInCollection,
+} from "@/lib/query";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { StorageError } from "@supabase/storage-js";
+import { PostgrestError } from "@supabase/supabase-js";
 import { BookMarked, Edit, ExternalLink, FilePlus, MoreVertical, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const researchPaperSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
@@ -44,61 +55,86 @@ const researchPaperSchema = z.object({
   link: z.httpUrl({ message: "Invalid URL" }),
 });
 
-function PapersDialog({ collectionId, refetch }: { collectionId: string; refetch: () => void }) {
-  const [value, setValue] = useState("");
-  const [open, setOpen] = useState(false);
+const paperDialogMode = [
+  {
+    title: "Add Research Paper",
+    description: "Add details about a published paper from this research",
+    buttonText: "Add Paper",
+    toast: {
+      loading: "Adding research paper...",
+      success: "Research paper added successfully!",
+      error: ({ message }: { message: string }) => `Error adding research paper: ${message || "Unknown error"}`,
+    },
+  },
+  {
+    title: "Edit Research Paper",
+    description: "Update details about this published research paper",
+    buttonText: "Save Changes",
+    toast: {
+      loading: "Saving changes...",
+      success: "Research paper updated successfully!",
+      error: ({ message }: { message: string }) => `Error updating research paper: ${message || "Unknown error"}`,
+    },
+  },
+] as const;
+
+function PapersDialog({
+  open,
+  setOpen,
+  dateInput,
+  setDateInput,
+  paperPromise,
+  refetch,
+  paper,
+}: {
+  paperPromise: (data: z.infer<typeof researchPaperSchema>) => Promise<StorageError | PostgrestError | null>;
+  refetch: () => void;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  paper?: ResearchPaper | null;
+  dateInput: string;
+  setDateInput: (date: string) => void;
+}) {
+  const mode = paperDialogMode[paper ? 1 : 0];
 
   const form = useForm<z.infer<typeof researchPaperSchema>>({
     resolver: zodResolver(researchPaperSchema),
-    defaultValues: {
-      title: "",
-      authors: "",
-      journal: "",
-      description: "",
-      publishedAt: undefined,
-      link: "",
+    values: {
+      title: paper?.title || "",
+      authors: paper?.authors || "",
+      journal: paper?.journal || "",
+      description: paper?.description || "",
+      publishedAt: paper?.publishedAt || undefined,
+      link: paper?.link || "",
     },
   });
 
   async function onSubmit(data: z.infer<typeof researchPaperSchema>) {
-    toast.promise(
-      addPaperToCollection(collectionId, {
-        ...data,
-        published_at: data.publishedAt.toISOString(),
-      }),
-      {
-        loading: "Adding research paper...",
-        success: ({ error }) => {
-          if (error) {
-            throw error;
-          }
-          refetch();
-          form.reset();
-          setValue("");
-          setOpen(false);
-          return "Research paper added successfully!";
-        },
-        error: ({ error }) => {
-          setOpen(true);
-          return `Error adding research paper: ${error.message || "Unknown error"}`;
-        },
+    toast.promise(paperPromise(data), {
+      loading: mode.toast.loading,
+      success: (error) => {
+        if (error) {
+          throw error;
+        }
+        refetch();
+        form.reset();
+        setDateInput("");
+        setOpen(false);
+        return mode.toast.success;
       },
-    );
+      error: (error) => {
+        setOpen(true);
+        return mode.toast.error(error);
+      },
+    });
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <FilePlus className="mr-2 size-4" />
-          Add Paper
-        </Button>
-      </DialogTrigger>
-
       <DialogContent className="sm:max-w-[500px] flex flex-col p-0 gap-0">
         <DialogHeader className="border-b px-6 pt-6 pb-4">
-          <DialogTitle>Add Research Paper</DialogTitle>
-          <DialogDescription className="">Add details about a published paper from this research</DialogDescription>
+          <DialogTitle>{mode.title}</DialogTitle>
+          <DialogDescription className="">{mode.description}</DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[80vh] flex flex-col w-full px-6">
           <form className="px-1 pt-4 pb-8" onSubmit={form.handleSubmit(onSubmit)}>
@@ -168,8 +204,8 @@ function PapersDialog({ collectionId, refetch }: { collectionId: string; refetch
                     field={field}
                     fieldState={fieldState}
                     disabled={{ after: new Date() }}
-                    value={value}
-                    setValue={setValue}
+                    value={dateInput}
+                    setValue={setDateInput}
                   />
                 )}
               />
@@ -186,7 +222,7 @@ function PapersDialog({ collectionId, refetch }: { collectionId: string; refetch
               />
               <Field>
                 <Button type="submit" className="w-full">
-                  <Plus className="mr-2" /> Add Paper
+                  <Plus className="mr-2" /> {mode.buttonText}
                 </Button>
               </Field>
             </FieldGroup>
@@ -194,6 +230,136 @@ function PapersDialog({ collectionId, refetch }: { collectionId: string; refetch
         </ScrollArea>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function AddPaperDialog({
+  collectionId,
+  open,
+  setOpen,
+  refetch,
+}: {
+  collectionId: string;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  refetch: () => void;
+}) {
+  const [dateInput, setDateInput] = useState("");
+
+  const addPaperPromise = (data: z.infer<typeof researchPaperSchema>) => {
+    const d = data.publishedAt;
+    const utcDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    return addPaperToCollection(collectionId, {
+      ...data,
+      publishedAt: utcDate.toISOString(),
+    });
+  };
+
+  return (
+    <PapersDialog
+      paperPromise={addPaperPromise}
+      refetch={refetch}
+      dateInput={dateInput}
+      setDateInput={setDateInput}
+      open={open}
+      setOpen={setOpen}
+    />
+  );
+}
+
+function EditPaperDialog({
+  open,
+  setOpen,
+  dateInput,
+  setDateInput,
+  refetch,
+  paper,
+}: {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  refetch: () => void;
+  paper: ResearchPaper | null;
+  dateInput: string;
+  setDateInput: (date: string) => void;
+}) {
+  if (!paper) {
+    return null;
+  }
+
+  const editPaperPromise = (data: z.infer<typeof researchPaperSchema>) => {
+    const d = data.publishedAt;
+    const utcDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    return updatePaperInCollection(paper.id, {
+      ...data,
+      publishedAt: utcDate.toISOString(),
+    });
+  };
+
+  return (
+    <PapersDialog
+      paperPromise={editPaperPromise}
+      refetch={refetch}
+      dateInput={dateInput}
+      setDateInput={setDateInput}
+      open={open}
+      setOpen={setOpen}
+      paper={paper}
+    />
+  );
+}
+
+function DeletePaperDialog({
+  paper,
+  open,
+  setOpen,
+  refetch,
+}: {
+  paper: ResearchPaper | null;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  refetch: () => void;
+}) {
+  if (!paper) {
+    return null;
+  }
+
+  const removePaper = () => {
+    setOpen(false);
+    toast.promise(deletePaperFromCollection(paper.id), {
+      loading: "Deleting paper...",
+      success: (error) => {
+        if (error) {
+          throw error;
+        }
+        refetch();
+        return "Paper deleted successfully!";
+      },
+      error: (error) => {
+        setOpen(true);
+        return `Failed to delete paper: ${error.message || "Unknown error"}`;
+      },
+    });
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogContent className="w-sm ring-foreground/10 ring-1 p-4 rounded-xl outline-none">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete {paper.title}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete this paper? This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="bg-muted/50 -mx-4 -mb-4 rounded-b-xl border-t p-4">
+          <AlertDialogCancel onClick={() => setOpen(false)} size="sm" className="rounded-xl">
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction onClick={removePaper} size="sm" className="rounded-xl" variant="destructive">
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
@@ -206,6 +372,36 @@ export function PapersTab({
   collectionId: string;
   refetch: () => void;
 }) {
+  const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selectedPaper, setSelectedPaper] = useState<ResearchPaper | null>(null);
+  const [editDateInput, setEditDateInput] = useState("");
+
+  const openAddModal = () => {
+    setSelectedPaper(null);
+    setAddOpen(true);
+  };
+
+  const openEditModal = (paper: ResearchPaper) => (e: Event) => {
+    e.preventDefault();
+    setSelectedPaper(paper);
+    setEditDateInput(
+      paper.publishedAt.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }),
+    );
+    setEditOpen(true);
+  };
+
+  const openDeleteModal = (paper: ResearchPaper) => (e: Event) => {
+    e.preventDefault();
+    setSelectedPaper(paper);
+    setDeleteOpen(true);
+  };
+
   return (
     <TabsContent value="papers" className="space-y-4">
       <Card>
@@ -215,7 +411,10 @@ export function PapersTab({
               <CardTitle>Research Papers</CardTitle>
               <CardDescription>Add and manage published papers from this research study.</CardDescription>
             </div>
-            <PapersDialog collectionId={collectionId} refetch={refetch} />
+            <Button onClick={openAddModal}>
+              <FilePlus className="mr-2 size-4" />
+              Add Paper
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -233,18 +432,18 @@ export function PapersTab({
                           day: "numeric",
                         })}
                       </Badge>
-                      <DropdownMenu>
+                      <DropdownMenu modal={false}>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon-sm" className="size-5 rounded-full">
                             <MoreVertical className="size-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onSelect={openEditModal(paper)}>
                             <Edit className="mr-2 size-4" />
                             Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onSelect={openDeleteModal(paper)}>
                             <Trash2 className="mr-2 size-4" />
                             Delete
                           </DropdownMenuItem>
@@ -280,6 +479,16 @@ export function PapersTab({
           </div>
         </CardContent>
       </Card>
+      <AddPaperDialog collectionId={collectionId} refetch={refetch} open={addOpen} setOpen={setAddOpen} />
+      <EditPaperDialog
+        paper={selectedPaper}
+        refetch={refetch}
+        open={editOpen}
+        setOpen={setEditOpen}
+        dateInput={editDateInput}
+        setDateInput={setEditDateInput}
+      />
+      <DeletePaperDialog paper={selectedPaper} refetch={refetch} open={deleteOpen} setOpen={setDeleteOpen} />
     </TabsContent>
   );
 }
