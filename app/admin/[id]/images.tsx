@@ -1,13 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,15 +13,28 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { addImageToCollection, CollectionImage } from "@/lib/query";
+import { addImageToCollection, CollectionImage, deleteImageFromCollection, updateImageInCollection } from "@/lib/query";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Edit, ImagePlus, MoreVertical, Trash2, Upload, UploadIcon, X } from "lucide-react";
+import { PostgrestError } from "@supabase/supabase-js";
+import { StorageError } from "@supabase/storage-js";
+import { Edit, ImagePlus, MoreVertical, Trash, Trash2, Upload, UploadIcon, X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
+import { set, z } from "zod";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ref } from "process";
 
 const uploadImageSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
@@ -37,20 +43,84 @@ const uploadImageSchema = z.object({
 
 type UploadImageFormData = z.infer<typeof uploadImageSchema>;
 
-function ImagesDialog({ collectionId, refetch }: { collectionId: string; refetch: () => void }) {
-  const [isDragging, setIsDragging] = useState(false);
-  const [open, setOpen] = useState(false);
+const imageDialogMode = [
+  {
+    title: "Upload Analytics Image",
+    description: "Add a new visualization to the collection",
+    buttonText: "Upload Image",
+    toastText: {
+      loading: "Uploading image...",
+      success: "Image uploaded successfully!",
+      error: ({ message }: { message: string }) => `Failed to upload image: ${message || "Unknown error"}`,
+    },
+  },
+  {
+    title: "Edit Analytics Image",
+    description: "Update the visualization details",
+    buttonText: "Update Image",
+    toastText: {
+      loading: "Updating image...",
+      success: "Image updated successfully!",
+      error: ({ message }: { message: string }) => `Failed to update image: ${message || "Unknown error"}`,
+    },
+  },
+] as const;
+
+function ImageDialog({
+  open,
+  setOpen,
+  preview,
+  setPreview,
+  refetch,
+  imagePromise,
+  image,
+}: {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  preview: string | null;
+  setPreview: (preview: string | null) => void;
+  refetch: () => void;
+  imagePromise: (data: UploadImageFormData, selectedFile: File) => Promise<StorageError | PostgrestError | null>;
+  image?: CollectionImage;
+}) {
+  const mode = imageDialogMode[image ? 1 : 0];
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const form = useForm<UploadImageFormData>({
     resolver: zodResolver(uploadImageSchema),
-    defaultValues: {
-      title: "",
-      description: "",
+    values: {
+      title: image?.title || "",
+      description: image?.description || "",
     },
   });
+
+  const onSubmit = (data: UploadImageFormData) => {
+    if ((!selectedFile && !image) || preview === null) {
+      setFileError("Please select an image file");
+      return;
+    }
+    setOpen(false);
+    toast.promise(imagePromise(data, selectedFile!), {
+      loading: mode.toastText.loading,
+      success: (error) => {
+        if (error) {
+          throw error;
+        }
+        form.reset();
+        setSelectedFile(null);
+        setPreview(null);
+        refetch();
+        return mode.toastText.success;
+      },
+      error: (error) => {
+        setOpen(true);
+        return mode.toastText.error(error);
+      },
+    });
+  };
 
   const handleFileUpload = (files: FileList | null) => {
     if (files && files.length > 0) {
@@ -95,50 +165,23 @@ function ImagesDialog({ collectionId, refetch }: { collectionId: string; refetch
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => handleFileUpload(e.target.files);
 
-  const onSubmit = (data: UploadImageFormData) => {
-    if (!selectedFile) {
-      setFileError("Please select an image file");
-      return;
-    }
+  const removeSelectedFile = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    e.stopPropagation();
+    setSelectedFile(null);
+    setPreview(null);
+  };
+
+  const onOpenChange = () => {
+    setFileError(null);
     setOpen(false);
-    toast.promise(
-      addImageToCollection(collectionId, {
-        title: data.title,
-        description: data.description,
-        imageFile: selectedFile,
-      }),
-      {
-        loading: "Uploading image...",
-        success: (error) => {
-          if (error) {
-            throw error;
-          }
-          form.reset();
-          setSelectedFile(null);
-          setPreview(null);
-          refetch();
-          return "Image uploaded successfully!";
-        },
-        error: (error) => {
-          setOpen(true);
-          return `Failed to upload image: ${error.message || "Unknown error"}`;
-        },
-      },
-    );
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <ImagePlus className="mr-2 size-4" />
-          Upload Image
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] flex flex-col p-0 gap-0">
         <DialogHeader className="border-b px-6 pt-6 pb-4">
-          <DialogTitle>Upload Analytics Image</DialogTitle>
-          <DialogDescription>Add a new visualization to share with participants.</DialogDescription>
+          <DialogTitle>{mode.title}</DialogTitle>
+          <DialogDescription>{mode.description}</DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[80vh] flex flex-col w-full px-6">
           <form onSubmit={form.handleSubmit(onSubmit)} className="px-1 pt-4 pb-8">
@@ -189,14 +232,11 @@ function ImagesDialog({ collectionId, refetch }: { collectionId: string; refetch
                   {preview ? (
                     <div className="relative w-full h-full">
                       <Button
+                        type="button"
                         size="icon-sm"
                         variant="outline"
                         className="absolute top-1 right-1 size-6"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedFile(null);
-                          setPreview(null);
-                        }}
+                        onClick={removeSelectedFile}
                       >
                         <X />
                       </Button>
@@ -218,7 +258,7 @@ function ImagesDialog({ collectionId, refetch }: { collectionId: string; refetch
 
               <Field>
                 <Button type="submit" className="w-full">
-                  <UploadIcon className="mr-2" /> Upload Image
+                  <UploadIcon className="mr-2" /> {mode.buttonText}
                 </Button>
               </Field>
             </FieldGroup>
@@ -226,6 +266,132 @@ function ImagesDialog({ collectionId, refetch }: { collectionId: string; refetch
         </ScrollArea>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function AddImageDialog({
+  collectionId,
+  open,
+  setOpen,
+  refetch,
+}: {
+  collectionId: string;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  refetch: () => void;
+}) {
+  const [preview, setPreview] = useState<string | null>(null);
+
+  const addImagePromise = (data: UploadImageFormData, selectedFile: File) =>
+    addImageToCollection(collectionId, {
+      title: data.title,
+      description: data.description,
+      imageFile: selectedFile,
+    });
+
+  return (
+    <ImageDialog
+      open={open}
+      setOpen={setOpen}
+      preview={preview}
+      setPreview={setPreview}
+      refetch={refetch}
+      imagePromise={addImagePromise}
+    />
+  );
+}
+
+function EditImageDialog({
+  open,
+  setOpen,
+  preview,
+  setPreview,
+  refetch,
+  image,
+}: {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  preview: string | null;
+  setPreview: (preview: string | null) => void;
+  refetch: () => void;
+  image: CollectionImage | null;
+}) {
+  if (!image) {
+    return null;
+  }
+
+  const editImagePromise = (data: UploadImageFormData, selectedFile: File) =>
+    updateImageInCollection(image, {
+      title: data.title,
+      description: data.description,
+      imageFile: selectedFile || undefined,
+    });
+
+  return (
+    <ImageDialog
+      open={open}
+      setOpen={setOpen}
+      refetch={refetch}
+      preview={preview}
+      setPreview={setPreview}
+      imagePromise={editImagePromise}
+      image={image}
+    />
+  );
+}
+
+function DeleteImageDialog({
+  image,
+  open,
+  setOpen,
+  refetch,
+}: {
+  image: CollectionImage | null;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  refetch: () => void;
+}) {
+  if (!image) {
+    return null;
+  }
+
+  const removeImage = () => {
+    setOpen(false);
+    toast.promise(deleteImageFromCollection(image), {
+      loading: "Deleting image...",
+      success: (error) => {
+        if (error) {
+          throw error;
+        }
+        refetch();
+        return "Image deleted successfully!";
+      },
+      error: (error) => {
+        setOpen(true);
+        return `Failed to delete image: ${error.message || "Unknown error"}`;
+      },
+    });
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogContent className="w-sm ring-foreground/10 ring-1 p-4 rounded-xl outline-none">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete {image.title}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete this image? This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="bg-muted/50 -mx-4 -mb-4 rounded-b-xl border-t p-4">
+          <AlertDialogCancel onClick={() => setOpen(false)} size="sm" className="rounded-xl">
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction onClick={removeImage} size="sm" className="rounded-xl" variant="destructive">
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
@@ -238,6 +404,30 @@ export function ImagesTab({
   collectionId: string;
   refetch: () => void;
 }) {
+  const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<CollectionImage | null>(null);
+  const [editPreview, setEditPreview] = useState<string | null>(null);
+
+  const openAddModal = () => {
+    setSelectedImage(null);
+    setAddOpen(true);
+  };
+
+  const openEditModal = (image: CollectionImage) => (e: Event) => {
+    e.preventDefault();
+    setSelectedImage(image);
+    setEditPreview(image.url);
+    setEditOpen(true);
+  };
+
+  const openDeleteModal = (image: CollectionImage) => (e: Event) => {
+    e.preventDefault();
+    setSelectedImage(image);
+    setDeleteOpen(true);
+  };
+
   return (
     <TabsContent value="images" className="space-y-4">
       <Card>
@@ -247,7 +437,10 @@ export function ImagesTab({
               <CardTitle>Analytics Images</CardTitle>
               <CardDescription>Upload and manage analytics visualizations for participants.</CardDescription>
             </div>
-            <ImagesDialog collectionId={collectionId} refetch={refetch} />
+            <Button onClick={openAddModal}>
+              <ImagePlus className="mr-2 size-4" />
+              Upload Image
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -269,18 +462,18 @@ export function ImagesTab({
                       <h4 className="font-semibold">{image.title}</h4>
                       <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{image.description}</p>
                     </div>
-                    <DropdownMenu>
+                    <DropdownMenu modal={false}>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon-sm" className="size-5 rounded-full">
                           <MoreVertical className="size-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={openEditModal(image)}>
                           <Edit className="mr-2 size-4" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={openDeleteModal(image)}>
                           <Trash2 className="mr-2 size-4" />
                           Delete
                         </DropdownMenuItem>
@@ -294,6 +487,16 @@ export function ImagesTab({
           </div>
         </CardContent>
       </Card>
+      <AddImageDialog collectionId={collectionId} open={addOpen} setOpen={setAddOpen} refetch={refetch} />
+      <EditImageDialog
+        open={editOpen}
+        setOpen={setEditOpen}
+        image={selectedImage}
+        preview={editPreview}
+        setPreview={setEditPreview}
+        refetch={refetch}
+      />
+      <DeleteImageDialog image={selectedImage} open={deleteOpen} setOpen={setDeleteOpen} refetch={refetch} />
     </TabsContent>
   );
 }

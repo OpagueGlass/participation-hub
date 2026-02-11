@@ -17,7 +17,7 @@ const convertToPapers = (data: Tables<"collection_papers">) => {
 const convertToImages = (data: Tables<"collection_images">) => {
   const { collection_id, filename, ...rest } = data;
   const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/collection_image_file/${collection_id}/${filename}`;
-  return { ...rest, url };
+  return { ...rest, collectionID: collection_id, filename, url };
 };
 
 const convertToConsent = (data: {
@@ -261,5 +261,49 @@ export async function addImageToCollection(
     filename: imageFile.name,
   });
 
+  return error;
+}
+
+export async function updateImageInCollection(
+  oldImage: CollectionImage,
+  newImage: Partial<{ title: string; description: string; imageFile: File }>,
+) {
+  const { imageFile, ...rest } = newImage;
+
+  if (imageFile) {
+    const oldImageRelativePath = `${oldImage.collectionID}/${oldImage.filename}`;
+    const { error: deleteError } = await supabase.storage.from("collection_image_file").remove([oldImageRelativePath]);
+
+    if (deleteError) {
+      return deleteError;
+    }
+
+    const { error: storageError } = await supabase.storage
+      .from("collection_image_file")
+      .upload(`${oldImage.collectionID}/${imageFile.name}`, imageFile);
+
+    if (storageError) {
+      return storageError;
+    }
+
+    const { error } = await supabase
+      .from("collection_images")
+      .update({ ...rest, filename: imageFile.name })
+      .eq("id", oldImage.id);
+
+    return error;
+  } else {
+    const { error } = await supabase.from("collection_images").update(rest).eq("id", oldImage.id);
+    return error;
+  }
+}
+
+export async function deleteImageFromCollection(image: CollectionImage) {
+  const imageRelativePath = `${image.collectionID}/${image.filename}`;
+  const { error: storageError } = await supabase.storage.from("collection_image_file").remove([imageRelativePath]);
+  if (storageError) {
+    return storageError;
+  }
+  const { error } = await supabase.from("collection_images").delete().eq("id", image.id);
   return error;
 }
