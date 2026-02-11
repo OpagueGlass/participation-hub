@@ -91,7 +91,7 @@ function PapersDialog({
   refetch: () => void;
   open: boolean;
   setOpen: (open: boolean) => void;
-  paper?: ResearchPaper | null;
+  paper?: ResearchPaper;
   dateInput: string;
   setDateInput: (date: string) => void;
 }) {
@@ -99,14 +99,22 @@ function PapersDialog({
 
   const form = useForm<z.infer<typeof researchPaperSchema>>({
     resolver: zodResolver(researchPaperSchema),
-    values: {
-      title: paper?.title || "",
-      authors: paper?.authors || "",
-      journal: paper?.journal || "",
-      description: paper?.description || "",
-      publishedAt: paper?.publishedAt,
-      link: paper?.link || "",
-    },
+    values: paper
+      ? {
+          title: paper.title,
+          authors: paper.authors,
+          journal: paper.journal,
+          description: paper.description,
+          publishedAt: paper.publishedAt,
+          link: paper.link,
+        }
+      : {
+          title: "",
+          authors: "",
+          journal: "",
+          description: "",
+          link: "",
+        },
   });
 
   async function onSubmit(data: z.infer<typeof researchPaperSchema>) {
