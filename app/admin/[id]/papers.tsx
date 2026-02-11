@@ -29,7 +29,7 @@ import { StorageError } from "@supabase/storage-js";
 import { PostgrestError } from "@supabase/supabase-js";
 import { BookMarked, Edit, ExternalLink, FilePlus, MoreVertical, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { use, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -51,7 +51,9 @@ const researchPaperSchema = z.object({
   description: z.string().min(1, { message: "Description is required" }),
   publishedAt: z
     .date({ message: "Invalid date" })
-    .max(new Date(), { message: "Published date cannot be in the future" }),
+    .max(new Date(), { message: "Published date cannot be in the future" })
+    .optional()
+    .refine((date) => date instanceof Date, { message: "Published date is required" }),
   link: z.httpUrl({ message: "Invalid URL" }),
 });
 
@@ -99,22 +101,14 @@ function PapersDialog({
 
   const form = useForm<z.infer<typeof researchPaperSchema>>({
     resolver: zodResolver(researchPaperSchema),
-    values: paper
-      ? {
-          title: paper.title,
-          authors: paper.authors,
-          journal: paper.journal,
-          description: paper.description,
-          publishedAt: paper.publishedAt,
-          link: paper.link,
-        }
-      : {
-          title: "",
-          authors: "",
-          journal: "",
-          description: "",
-          link: "",
-        },
+    values: {
+      title: paper?.title || "",
+      authors: paper?.authors || "",
+      journal: paper?.journal || "",
+      description: paper?.description || "",
+      publishedAt: paper?.publishedAt,
+      link: paper?.link || "",
+    },
   });
 
   async function onSubmit(data: z.infer<typeof researchPaperSchema>) {
@@ -255,7 +249,7 @@ function AddPaperDialog({
   const [dateInput, setDateInput] = useState("");
 
   const addPaperPromise = (data: z.infer<typeof researchPaperSchema>) => {
-    const d = data.publishedAt;
+    const d = data.publishedAt!;
     const utcDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     return addPaperToCollection(collectionId, {
       ...data,
@@ -295,7 +289,7 @@ function EditPaperDialog({
   }
 
   const editPaperPromise = (data: z.infer<typeof researchPaperSchema>) => {
-    const d = data.publishedAt;
+    const d = data.publishedAt!;
     const utcDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     return updatePaperInCollection(paper.id, {
       ...data,
