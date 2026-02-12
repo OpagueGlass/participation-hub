@@ -1,6 +1,16 @@
 "use client";
 
 import { DatePickerInput } from "@/components/date-picker";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,32 +27,16 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  addPaperToCollection,
-  CollectionImage,
-  deletePaperFromCollection,
-  ResearchPaper,
-  updatePaperInCollection,
-} from "@/lib/query";
+import { addPaperToCollection, deletePaperFromCollection, ResearchPaper, updatePaperInCollection } from "@/lib/query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { StorageError } from "@supabase/storage-js";
 import { PostgrestError } from "@supabase/supabase-js";
 import { BookMarked, Edit, ExternalLink, FilePlus, MoreVertical, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { use, useState } from "react";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 const researchPaperSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),

@@ -28,7 +28,7 @@ export default function ResearchDetailPage() {
   });
 
   const stats = [
-    { title: "Participants", value: participantsData?.length ?? 0, icon: Users },
+    { title: "Participants", value: collection?.participants ?? 0, icon: Users },
     { title: "Images", value: collection?.images?.length ?? 0, icon: ImageIcon },
     { title: "Papers", value: collection?.papers?.length ?? 0, icon: FileText },
     {

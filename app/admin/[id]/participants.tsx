@@ -46,6 +46,7 @@ function ParticipantsDialog({
           onChange={setEmails}
           schema={z.email({ message: "Invalid email address" })}
           description="Enter one or more email addresses, separated by commas"
+          className="aspect-[16/10]"
         />
         <div className="flex items-center justify-between gap-4 mt-4">
           <Button variant="outline" onClick={() => setEmails([])}>

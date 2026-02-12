@@ -1,30 +1,41 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Plus, X, Mail, Info } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { InputTags } from "@/components/ui/input-tags";
+import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/context/auth-context";
+import { createNewResearch } from "@/lib/query";
+import { Plus } from "lucide-react";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+
+const newResearchSchema = z.object({
+  title: z.string().min(1, { message: "Title is required" }),
+  description: z.string().min(1, { message: "Description is required" }),
+});
 
 export default function CreateResearchPage() {
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [emails, setEmails] = useState<string[]>([])
-  const [emailInput, setEmailInput] = useState("")
+  const [emails, setEmails] = useState<string[]>([]);
+  const { session } = useAuth();
 
-  const handleAddEmail = () => {
-    if (emailInput && !emails.includes(emailInput)) {
-      setEmails([...emails, emailInput])
-      setEmailInput("")
-    }
-  }
+  const form = useForm<z.infer<typeof newResearchSchema>>({
+    values: {
+      title: "",
+      description: "",
+    },
+  });
 
-  const handleRemoveEmail = (email: string) => {
-    setEmails(emails.filter((e) => e !== email))
+  async function onSubmit(data: z.infer<typeof newResearchSchema>) {
+    toast.promise(createNewResearch(session!.user!.id, data, emails), {
+      loading: "Creating research study...",
+      success: "Research study created successfully!",
+      error: (err) => `Error creating research study: ${err.message}`,
+    });
   }
 
   return (
@@ -36,7 +47,7 @@ export default function CreateResearchPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6">
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
@@ -44,121 +55,56 @@ export default function CreateResearchPage() {
               <CardDescription>Provide basic information about your research study.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">
-                  Title <span className="text-destructive">*</span>
-                </Label>
-                <Input 
-                  id="title" 
-                  placeholder="Enter research title" 
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">
-                  Description <span className="text-destructive">*</span>
-                </Label>
-                <Textarea
-                  id="description"
-                  placeholder="Describe the purpose and scope of your research..."
-                  className="min-h-[150px]"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Invite Participants</CardTitle>
-              <CardDescription>Add participant email addresses to send invitations.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Enter email address"
-                    className="pl-10"
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleAddEmail()}
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                <FieldGroup>
+                  <Controller
+                    name="title"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="title">Title</FieldLabel>
+                        <Input {...field} id="title" type="text" placeholder="Enter research title" required />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
                   />
-                </div>
-                <Button onClick={handleAddEmail}>
-                  <Plus className="mr-2 size-4" />
-                  Add
-                </Button>
-              </div>
-
-              {emails.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Invited Participants ({emails.length})</Label>
-                  <div className="flex flex-wrap gap-2 p-4 border rounded-lg bg-muted/50">
-                    {emails.map((email) => (
-                      <Badge key={email} variant="secondary" className="gap-1 pr-1">
-                        {email}
-                        <button
-                          onClick={() => handleRemoveEmail(email)}
-                          className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
-                        >
-                          <X className="size-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <p className="text-sm text-muted-foreground">
-                Participants will receive an email invitation to join your research study. They will need to create an account and provide consent before participating.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Info className="size-4" />
-                Quick Tips
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-sm text-muted-foreground">
-              <div className="space-y-2">
-                <p className="font-medium text-foreground">Title</p>
-                <p>Use a clear, descriptive title that participants can easily understand.</p>
-              </div>
-              <div className="space-y-2">
-                <p className="font-medium text-foreground">Description</p>
-                <p>Explain the purpose of your research and what participants can expect.</p>
-              </div>
-              <div className="space-y-2">
-                <p className="font-medium text-foreground">Participants</p>
-                <p>You can add more participants after creating the research.</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button className="w-full">Create Research</Button>
-              <Button variant="outline" className="w-full bg-transparent">
-                Save as Draft
-              </Button>
-              <Button variant="ghost" className="w-full" asChild>
-                <Link href="/admin/research">Cancel</Link>
-              </Button>
+                  <Controller
+                    name="description"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="description">Description</FieldLabel>
+                        <Textarea
+                          {...field}
+                          id="description"
+                          placeholder="Describe the purpose and scope of your research..."
+                          required
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+                  <Field className="max-h-md">
+                    <FieldLabel htmlFor="emails">Participant Emails</FieldLabel>
+                    <InputTags
+                      value={emails}
+                      onChange={setEmails}
+                      schema={z.email({ message: "Invalid email address" })}
+                      placeholder="Enter zero or more email addresses, separated by commas"
+                      className="h-[150px]"
+                    />
+                  </Field>
+                  <Field>
+                    <Button type="submit" className="w-full">
+                      <Plus className="mr-2" /> Create Research Study
+                    </Button>
+                  </Field>
+                </FieldGroup>
+              </form>
             </CardContent>
           </Card>
         </div>
       </div>
     </div>
-  )
+  );
 }
