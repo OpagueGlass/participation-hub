@@ -32,7 +32,7 @@ import { useRouter } from "next/navigation";
 const menuItems = [
   {
     title: "My Research",
-    url: "/admin/",
+    url: "/admin",
     icon: BookMarked,
   },
   {
@@ -82,8 +82,7 @@ export function AdminSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => {
                 const isActive =
-                  pathname === item.url ||
-                  (item.url !== "/admin" && pathname.startsWith(item.url) && item.url !== "/admin/research/create");
+                  pathname === item.url
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive}>
