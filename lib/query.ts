@@ -177,6 +177,7 @@ export async function getQuickStats(auth_id: string) {
   };
 }
 
+
 export async function getResearchParticipant(collection_id: string) {
   const { data, error } = await supabase
     .from("profile_collections")
@@ -211,6 +212,32 @@ export const inviteParticipantsToCollection = async (collection_id: string, emai
   });
 
   return { data, error };
+};
+
+export const createNewResearch = async (
+  researcher_id: string,
+  research: { title: string; description: string },
+  emails: string[],
+) => {
+  const { title, description } = research;
+  const { data, error: createError } = await supabase
+    .from("collections")
+    .insert({ title, description, created_at: new Date().toISOString() }).select("id").single();
+
+  if (createError) {
+    return createError;
+  }
+
+  const { error: researcherError } = await supabase.from("researcher_collections").insert({
+    researcher_id,
+    collection_id: data.id,
+  });
+
+  if (researcherError) {
+    return researcherError;
+  }
+
+  return (await inviteParticipantsToCollection(data.id, emails)).error;
 };
 
 export async function addImageToCollection(
