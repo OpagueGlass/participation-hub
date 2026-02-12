@@ -1,21 +1,19 @@
 "use client";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, MessageCircle } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
-import { z } from "zod";
-import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-import { addFeedback, getUserFeedback } from "@/lib/query";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/auth-context";
+import { addFeedback, getUserFeedback } from "@/lib/query";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
+import { MessageCircle } from "lucide-react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 const feedbackTypes = [
   { key: 1, label: "Login Difficulties" },
@@ -36,11 +34,7 @@ const feedbackSchema = z.object({
 export default function FeedbackPage() {
   const { session } = useAuth();
 
-  const {
-    data: userFeedback,
-    isLoading,
-    refetch,
-  } = useQuery({
+  const { data: userFeedback } = useQuery({
     queryKey: ["userFeedback", session!.user!.id],
     queryFn: () => getUserFeedback(session!.user!.id),
     enabled: !!session?.user?.id,
@@ -67,7 +61,7 @@ export default function FeedbackPage() {
       error: (err) => `Error submitting feedback: ${err.message}`,
     });
   }
-  console.log(form.formState.isSubmitting);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
@@ -158,7 +152,12 @@ export default function FeedbackPage() {
                         {feedbackTypes[feedback.feedback_type - 1]?.label || "General Feedback"}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Submitted on {new Date(feedback.submitted_at).toLocaleDateString([], { year: "numeric", month: "short", day: "numeric" })}
+                        Submitted on{" "}
+                        {new Date(feedback.submitted_at).toLocaleDateString([], {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
                       </p>
                     </div>
                   </div>
