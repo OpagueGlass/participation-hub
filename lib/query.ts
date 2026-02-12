@@ -55,6 +55,7 @@ export async function getUserCollections(auth_id: string, limit?: number) {
        `,
     )
     .eq("profiles.auth_id", auth_id)
+    .not("profiles", "is", null)
     .order("collections(created_at)", { ascending: false })
     .limit(limit || Infinity);
   if (error || !data) {
@@ -130,6 +131,7 @@ export async function getConsent(auth_id: string, collection_id: string) {
       `,
     )
     .eq("profiles.auth_id", auth_id)
+    .not("profiles", "is", null)
     .eq("collection_id", collection_id)
     .single();
 
@@ -155,7 +157,8 @@ export async function getQuickStats(auth_id: string) {
   const { count, error } = await supabase
     .from("profile_collections")
     .select("collection_id, profiles(auth_id)", { count: "exact", head: true })
-    .eq("profiles.auth_id", auth_id);
+    .eq("profiles.auth_id", auth_id)
+    .not("profiles", "is", null);
   if (error) {
     throw error;
   }
@@ -164,6 +167,7 @@ export async function getQuickStats(auth_id: string) {
     .from("profile_collections")
     .select("collections(status), profiles(auth_id)", { count: "exact", head: true })
     .eq("profiles.auth_id", auth_id)
+    .not("profiles", "is", null)
     .eq("collections.status", 1)
     .not("collections", "is", null);
 
@@ -176,7 +180,6 @@ export async function getQuickStats(auth_id: string) {
     activeCollections: activeCount || 0,
   };
 }
-
 
 export async function getResearchParticipant(collection_id: string) {
   const { data, error } = await supabase
@@ -222,7 +225,9 @@ export const createNewResearch = async (
   const { title, description } = research;
   const { data, error: createError } = await supabase
     .from("collections")
-    .insert({ title, description, created_at: new Date().toISOString() }).select("id").single();
+    .insert({ title, description, created_at: new Date().toISOString() })
+    .select("id")
+    .single();
 
   if (createError) {
     return createError;
