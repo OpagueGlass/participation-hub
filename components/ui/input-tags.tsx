@@ -17,10 +17,11 @@ type InputTagsProps = {
   schema?: z.ZodEmail;
   description?: string;
   onChange: React.Dispatch<React.SetStateAction<string[]>>;
+  placeholder?: string;
 };
 
 const InputTags = React.forwardRef<HTMLInputElement, InputTagsProps>(
-  ({ className, value, onChange, schema, description, ...props }, ref) => {
+  ({ className, value, onChange, schema, description, placeholder, ...props }, ref) => {
     const [pendingDataPoint, setPendingDataPoint] = React.useState("");
     const [error, setError] = React.useState<string | null>(null);
     const [visibleCount, setVisibleCount] = React.useState(200);
@@ -107,7 +108,7 @@ const InputTags = React.forwardRef<HTMLInputElement, InputTagsProps>(
           ref={containerRef}
           className={cn(
             // caveat: :has() variant requires tailwind v3.4 or above: https://tailwindcss.com/blog/tailwindcss-v3-4#new-has-variant
-            "has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-ring/50 has-[:focus-visible]:border-ring dark:has-[:focus-visible]:ring-neutral-300 flex aspect-[16/10] w-full overflow-y-auto flex-wrap content-start gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm ring-offset-white  disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-950 dark:ring-offset-neutral-950 cursor-text",
+            "has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-ring/50 has-[:focus-visible]:border-ring dark:has-[:focus-visible]:ring-neutral-300 flex w-full overflow-y-auto flex-wrap content-start gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm ring-offset-white  disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-950 dark:ring-offset-neutral-950 cursor-text",
             className,
             
           )}
@@ -152,6 +153,7 @@ const InputTags = React.forwardRef<HTMLInputElement, InputTagsProps>(
                 onChange(value.slice(0, -1));
               }
             }}
+            placeholder={placeholder}
             {...props}
             ref={inputRef}
           />
