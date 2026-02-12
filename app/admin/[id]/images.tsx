@@ -17,6 +17,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle
+} from "@/components/ui/empty";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { ImageZoom } from "@/components/ui/image-zoom";
 import { Input } from "@/components/ui/input";
@@ -28,7 +35,16 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { StorageError } from "@supabase/storage-js";
 import { PostgrestError } from "@supabase/supabase-js";
-import { Edit, ImagePlus, MoreVertical, Trash2, Upload, UploadIcon, X } from "lucide-react";
+import {
+  Edit,
+  ImageIcon,
+  ImagePlus,
+  MoreVertical,
+  Trash2,
+  Upload,
+  UploadIcon,
+  X
+} from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -443,47 +459,62 @@ export function ImagesTab({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {images.map((image) => (
-              <Card key={image.id} className="py-0 gap-0">
-                {/* <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center"> */}
-                <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-border/30 bg-muted/10 max-h-[500px]">
-                  {/* <ImageIcon className="size-12 text-muted-foreground" /> */}
-                  <ImageZoom className="h-full" zoomMargin={48}>
-                    <div className="absolute w-full h-full">
-                      <Image src={image.url} alt={image.title} fill priority unoptimized />
-                    </div>
-                  </ImageZoom>
-                </div>
-                <CardContent className="p-4 flex flex-col flex-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <h4 className="font-semibold">{image.title}</h4>
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{image.description}</p>
-                    </div>
-                    <DropdownMenu modal={false}>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon-sm" className="size-5 rounded-full">
-                          <MoreVertical className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={openEditModal(image)}>
-                          <Edit className="mr-2 size-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={openDeleteModal(image)}>
-                          <Trash2 className="mr-2 size-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+          {images.length > 0 ?
+          (<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {images.map((image) => (
+                <Card key={image.id} className="py-0 gap-0">
+                  {/* <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center"> */}
+                  <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-border/30 bg-muted/10 max-h-[500px]">
+                    {/* <ImageIcon className="size-12 text-muted-foreground" /> */}
+                    <ImageZoom className="h-full" zoomMargin={48}>
+                      <div className="absolute w-full h-full">
+                        <Image src={image.url} alt={image.title} fill priority unoptimized />
+                      </div>
+                    </ImageZoom>
                   </div>
-                  {/* <p className="text-xs text-muted-foreground mt-2">Uploaded: {image.uploadedAt}</p> */}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  <CardContent className="p-4 flex flex-col flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <h4 className="font-semibold">{image.title}</h4>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{image.description}</p>
+                      </div>
+                      <DropdownMenu modal={false}>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon-sm" className="size-5 rounded-full">
+                            <MoreVertical className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onSelect={openEditModal(image)}>
+                            <Edit className="mr-2 size-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={openDeleteModal(image)}>
+                            <Trash2 className="mr-2 size-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    {/* <p className="text-xs text-muted-foreground mt-2">Uploaded: {image.uploadedAt}</p> */}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>)
+             : (
+              <Empty className="border border-border">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <ImageIcon className="size-8 text-muted-foreground" />
+                  </EmptyMedia>
+                  <EmptyTitle>No Visualisations</EmptyTitle>
+                  <EmptyDescription>
+                    Visualisations using data from this study will appear here once available.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )
+          }
         </CardContent>
       </Card>
       <AddImageDialog collectionId={collectionId} open={addOpen} setOpen={setAddOpen} refetch={refetch} />

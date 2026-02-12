@@ -9,12 +9,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { InputTags } from "@/components/ui/input-tags";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TabsContent } from "@/components/ui/tabs";
 import { inviteParticipantsToCollection } from "@/lib/query";
 import { FunctionsHttpError } from "@supabase/supabase-js";
-import { Mail, UserRoundPlus, X } from "lucide-react";
+import { Mail, UserRoundIcon, UserRoundPlus, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -112,35 +113,47 @@ export function ParticipantsTab({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md">
-            <Table className="space-y-3">
-              <TableHeader>
-                <TableRow className="hover:bg-muted/40">
-                  <TableHead className="font-semibold py-3">Email</TableHead>
-                  <TableHead className="font-semibold py-3">Consent</TableHead>
-                  <TableHead className="font-semibold py-3">Joined</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {participants.map((participant, index) => (
-                  <TableRow
-                    key={participant.id}
-                    className={`${index % 2 === 1 && "bg-muted/40"} hover:bg-muted/60 transition-colors`}
-                  >
-                    <TableCell className="font-medium py-3">{participant.email}</TableCell>
-                    <TableCell className="py-3">
-                      <Badge variant={participant.consent ? "default" : "outline"}>
-                        {participant.consent ? "Agreed" : "Revoked"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground py-3">
-                      {participant.joinedAt.toLocaleDateString("en-GB")}
-                    </TableCell>
+          {participants.length > 0 ? (
+            <div className="rounded-md">
+              <Table className="space-y-3">
+                <TableHeader>
+                  <TableRow className="hover:bg-muted/40">
+                    <TableHead className="font-semibold py-3">Email</TableHead>
+                    <TableHead className="font-semibold py-3">Consent</TableHead>
+                    <TableHead className="font-semibold py-3">Joined</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {participants.map((participant, index) => (
+                    <TableRow
+                      key={participant.id}
+                      className={`${index % 2 === 1 && "bg-muted/40"} hover:bg-muted/60 transition-colors`}
+                    >
+                      <TableCell className="font-medium py-3">{participant.email}</TableCell>
+                      <TableCell className="py-3">
+                        <Badge variant={participant.consent ? "default" : "outline"}>
+                          {participant.consent ? "Agreed" : "Revoked"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground py-3">
+                        {participant.joinedAt.toLocaleDateString("en-GB")}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <Empty className="border border-border">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <UserRoundIcon className="size-8 text-muted-foreground" />
+                </EmptyMedia>
+                <EmptyTitle>No Participants</EmptyTitle>
+                <EmptyDescription>Participants invited to this study will appear here once available.</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          )}
         </CardContent>
       </Card>
     </TabsContent>
