@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       collection_images: {
@@ -121,6 +146,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      feedback: {
+        Row: {
+          auth_id: string
+          description: string
+          feedback_type: number
+          id: number
+          submitted_at: string
+        }
+        Insert: {
+          auth_id: string
+          description: string
+          feedback_type: number
+          id?: number
+          submitted_at?: string
+        }
+        Update: {
+          auth_id?: string
+          description?: string
+          feedback_type?: number
+          id?: number
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_auth_id_fkey"
+            columns: ["auth_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "feedback_feedback_type_fkey"
+            columns: ["feedback_type"]
+            isOneToOne: false
+            referencedRelation: "feedback_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_types: {
+        Row: {
+          description: string
+          id: number
+        }
+        Insert: {
+          description: string
+          id?: number
+        }
+        Update: {
+          description?: string
+          id?: number
+        }
+        Relationships: []
       }
       profile_collections: {
         Row: {
@@ -376,6 +455,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

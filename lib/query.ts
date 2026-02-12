@@ -181,6 +181,26 @@ export async function getQuickStats(auth_id: string) {
   };
 }
 
+export async function addFeedback(auth_id: string, feedback: { feedbackType: number; description: string }) {
+  const { feedbackType: feedback_type, description } = feedback;
+  const { error } = await supabase
+    .from("feedback")
+    .insert({ feedback_type, description, auth_id, submitted_at: new Date().toISOString() });
+  return error;
+}
+
+export async function getUserFeedback(auth_id: string) {
+  const { data, error } = await supabase
+    .from("feedback")
+    .select("*")
+    .eq("auth_id", auth_id)
+    .order("submitted_at", { ascending: false });
+  if (error) {
+    throw error;
+  }
+  return data;
+}
+
 export async function getResearchParticipant(collection_id: string) {
   const { data, error } = await supabase
     .from("profile_collections")

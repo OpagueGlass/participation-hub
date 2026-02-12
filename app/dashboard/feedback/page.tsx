@@ -7,35 +7,67 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
+import { z } from "zod";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { Field, FieldError, FieldGroup } from "@/components/ui/field";
+import { Spinner } from "@/components/ui/spinner";
+import { addFeedback, getUserFeedback } from "@/lib/query";
+import { useAuth } from "@/context/auth-context";
+import { useQuery } from "@tanstack/react-query";
+
+const feedbackTypes = [
+  { key: 1, label: "Login Difficulties" },
+  { key: 2, label: "Dataset Enquiry" },
+  { key: 3, label: "Chatbot Malfunctions" },
+  { key: 4, label: "Consent Management" },
+  { key: 5, label: "Suggestions" },
+  { key: 6, label: "Other" },
+];
+
+const feedbackSchema = z.object({
+  feedbackType: z.number().refine((val) => feedbackTypes.some((cat) => cat.key === val), {
+    message: "Please select a valid feedback category",
+  }),
+  description: z.string().min(10, "Please provide a more detailed message (at least 10 characters)"),
+});
 
 export default function FeedbackPage() {
-  const feedbackCategories = [
-    { key: "login", label: "Login Difficulties" },
-    { key: "dataset", label: "Dataset Enquiry" },
-    { key: "chatbot", label: "Chatbot Malfunctions" },
-    { key: "consent", label: "Consent Management" },
-    { key: "suggestions", label: "Suggestions" },
-    { key: "other", label: "Other" },
-  ];
+  const { session } = useAuth();
 
-  // Form state
-  const [category, setCategory] = useState("");
-  const [message, setMessage] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const {
+    data: userFeedback,
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["userFeedback", session!.user!.id],
+    queryFn: () => getUserFeedback(session!.user!.id),
+    enabled: !!session?.user?.id,
+  });
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setSubmitting(true);
-    // Simulate async submit
-    setTimeout(() => {
-      setSubmitting(false);
-      setSuccess(true);
-      setCategory("");
-      setMessage("");
-    }, 1200);
+  const form = useForm<z.infer<typeof feedbackSchema>>({
+    resolver: zodResolver(feedbackSchema),
+    values: {
+      feedbackType: 0,
+      description: "",
+    },
+  });
+
+  function onSubmit(data: z.infer<typeof feedbackSchema>) {
+    toast.promise(addFeedback(session!.user?.id, data), {
+      loading: "Submitting your feedback...",
+      success: (err) => {
+        if (err) {
+          throw err;
+        }
+        form.reset();
+        return "Thank you for your feedback!";
+      },
+      error: (err) => `Error submitting feedback: ${err.message}`,
+    });
   }
-
+  console.log(form.formState.isSubmitting);
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
@@ -48,7 +80,7 @@ export default function FeedbackPage() {
         </div>
       </div>
 
-      <div >
+      <div>
         <Card>
           <CardHeader>
             <CardTitle>Submit Feedback</CardTitle>
@@ -57,62 +89,57 @@ export default function FeedbackPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* <div className="space-y-2">
-                  <Label htmlFor="study">Related Study (Optional)</Label>
-                  <Select>
-                    <SelectTrigger id="study">
-                      <SelectValue placeholder="Select a study" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="general">General Feedback</SelectItem>
-                      <SelectItem value="study1">Mental Health and Well-being Study</SelectItem>
-                      <SelectItem value="study2">Sleep Patterns Research</SelectItem>
-                      <SelectItem value="study3">Digital Wellbeing Survey</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div> */}
-
-              <div className="space-y-2">
-                <Label htmlFor="category">Feedback Category</Label>
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger id="category" className="min-w-[200px]">
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {feedbackCategories.map((category) => (
-                      <SelectItem key={category.key} value={category.key}>
-                        {category.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="message">Your Message</Label>
-                <Textarea
-                  id="message"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Please share your feedback, questions, or concerns here..."
-                  className="min-h-[150px] max-h-[150px]"
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FieldGroup>
+                <Controller
+                  control={form.control}
+                  name="feedbackType"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid} className="w-[300px]">
+                      <Label htmlFor="feedbackType">Feedback Category</Label>
+                      <Select
+                        onValueChange={(value) => field.onChange(Number(value))}
+                        value={field.value === 0 ? "" : String(field.value)}
+                      >
+                        <SelectTrigger id="feedbackType" className="w-[200px] max-w-[200px]">
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {feedbackTypes.map((category) => (
+                            <SelectItem key={category.key} value={category.key.toString()}>
+                              {category.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} className="w-[300px]" />}
+                    </Field>
+                  )}
                 />
-              </div>
-
-              <div className="flex gap-3">
-                <Button className="flex-1" type="submit" disabled={submitting || !category || !message}>
-                  {submitting ? "Submitting..." : "Submit Feedback"}
+                <Controller
+                  control={form.control}
+                  name="description"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <Label htmlFor="description">Your Message</Label>
+                      <Textarea
+                        id="description"
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        placeholder="Please share your feedback, questions, or concerns here..."
+                        className="min-h-[150px]"
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+              </FieldGroup>
+              <Field>
+                <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting && <Spinner />}
+                  Submit Feedback
                 </Button>
-                {/* <Button variant="outline">Clear Form</Button> */}
-              </div>
-
-              {success && <p className="text-green-600 text-sm">Thank you for your feedback!</p>}
-
-              {/* <p className="text-sm text-muted-foreground">
-                The research team typically responds within 2-3 business days. For urgent matters, please contact us
-                directly.
-              </p> */}
+              </Field>
             </form>
           </CardContent>
         </Card>
@@ -122,29 +149,27 @@ export default function FeedbackPage() {
             <CardTitle className="text-base">Previous Feedback</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 bg-muted/50 rounded-lg">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <p className="font-semibold text-sm">Technical Issue - Login Problem</p>
-                  <p className="text-xs text-muted-foreground">Submitted on Oct 20, 2023</p>
+            {userFeedback && userFeedback.length > 0 ? (
+              userFeedback.map((feedback) => (
+                <div key={feedback.id} className="p-4 bg-muted/50 rounded-lg">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="font-semibold text-sm">
+                        {feedbackTypes[feedback.feedback_type - 1]?.label || "General Feedback"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Submitted on {new Date(feedback.submitted_at).toLocaleDateString([], { year: "numeric", month: "short", day: "numeric" })}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{feedback.description}</p>
                 </div>
-                <span className="text-xs bg-green-500/10 text-green-600 px-2 py-1 rounded">Resolved</span>
-              </div>
-              <p className="text-sm text-muted-foreground">Had trouble logging in with OTP verification...</p>
-            </div>
-
-            <div className="p-4 bg-muted/50 rounded-lg">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <p className="font-semibold text-sm">Data Question - Study Results</p>
-                  <p className="text-xs text-muted-foreground">Submitted on Sep 15, 2023</p>
-                </div>
-                <span className="text-xs bg-green-500/10 text-green-600 px-2 py-1 rounded">Resolved</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                When will the final results of the sleep study be available?
+              ))
+            ) : (
+              <p className=" p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+                You have not submitted any feedback yet.
               </p>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
