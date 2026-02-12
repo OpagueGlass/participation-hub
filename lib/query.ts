@@ -1,5 +1,5 @@
-import { supabase } from "./supabase";
 import { Tables } from "./db-types";
+import { supabase } from "./supabase";
 
 export type ResearchPaper = ReturnType<typeof convertToPapers>;
 export type CollectionImage = ReturnType<typeof convertToImages>;
@@ -159,6 +159,7 @@ export async function getQuickStats(auth_id: string) {
     .select("collection_id, profiles(auth_id)", { count: "exact", head: true })
     .eq("profiles.auth_id", auth_id)
     .not("profiles", "is", null);
+
   if (error) {
     throw error;
   }
@@ -263,6 +264,19 @@ export const createNewResearch = async (
   }
 
   return (await inviteParticipantsToCollection(data.id, emails)).error;
+};
+
+export const updateResearchDetails = async (
+  collection_id: string,
+  research: Partial<{ title: string; description: string; status: number }>,
+) => {
+  const { error } = await supabase.from("collections").update(research).eq("id", collection_id);
+  return error;
+};
+
+export const deleteResearchCollection = async (collection_id: string) => {
+  const { error } = await supabase.from("collections").delete().eq("id", collection_id);
+  return error;
 };
 
 export async function addImageToCollection(
