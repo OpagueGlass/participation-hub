@@ -126,7 +126,7 @@ function PapersDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={setOpen} modal>
       <DialogContent className="sm:max-w-[500px] flex flex-col p-0 gap-0">
         <DialogHeader className="border-b px-6 pt-6 pb-4">
           <DialogTitle>{mode.title}</DialogTitle>
@@ -200,8 +200,6 @@ function PapersDialog({
                     field={field}
                     fieldState={fieldState}
                     disabled={{ after: new Date() }}
-                    value={dateInput}
-                    setValue={setDateInput}
                   />
                 )}
               />
