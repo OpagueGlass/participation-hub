@@ -29,8 +29,6 @@ import { TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { addPaperToCollection, deletePaperFromCollection, ResearchPaper, updatePaperInCollection } from "@/lib/query";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { StorageError } from "@supabase/storage-js";
-import { PostgrestError } from "@supabase/supabase-js";
 import { BookMarked, Edit, ExternalLink, FilePlus, MoreVertical, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -83,7 +81,7 @@ function PapersDialog({
   refetch,
   paper,
 }: {
-  paperPromise: (data: z.infer<typeof researchPaperSchema>) => Promise<StorageError | PostgrestError | null>;
+  paperPromise: (data: z.infer<typeof researchPaperSchema>) => ReturnType<typeof addPaperToCollection>;
   refetch: () => void;
   open: boolean;
   setOpen: (open: boolean) => void;

@@ -33,8 +33,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { addImageToCollection, CollectionImage, deleteImageFromCollection, updateImageInCollection } from "@/lib/query";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { StorageError } from "@supabase/storage-js";
-import { PostgrestError } from "@supabase/supabase-js";
 import {
   Edit,
   ImageIcon,
@@ -95,7 +93,7 @@ function ImageDialog({
   preview: string | null;
   setPreview: (preview: string | null) => void;
   refetch: () => void;
-  imagePromise: (data: UploadImageFormData, selectedFile: File) => Promise<StorageError | PostgrestError | null>;
+  imagePromise: (data: UploadImageFormData, selectedFile: File) => ReturnType<typeof addImageToCollection>;
   image?: CollectionImage;
 }) {
   const mode = imageDialogMode[image ? 1 : 0];
