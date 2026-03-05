@@ -49,7 +49,8 @@ Row Level Security (RLS) is configured such that users only have select access t
 
 ## Project Structure
 The `/app` directory contains the code of the webpages, with the subfolders corresponding to the pathname in the application, i.e. `page.tsx` in `/dashboard` contains the code for `localhost:3000/dashboard`. Folders with square bracket names such as `[id]` are for dynamic routes. Typically, subfolders contain a single `page.tsx` file but `/app/admin/[id]` has multiple files for each tab to separate their code. The `/app/callback/page.tsx` contains the redirect routes based on the user roles after logging in. 
-> **Note** `/app/dashboard/chatbot` and `/app/dashboard/consents` do not have functionality implemented and are purely UI components.
+> [!NOTE]
+> `/app/dashboard/chatbot` and `/app/dashboard/consents` do not have functionality implemented and are purely UI components.
 
 The `/components` directory stores the base components from Shadcn in `/components/ui`, which can be edited to change the default behaviour, whereas custom shared components are stored in the root.
 
@@ -67,11 +68,14 @@ The [email template](https://supabase.com/dashboard/project/mvbypxdgotiqghrbzdra
 The function takes in an array of emails and checks if they exist in the `profiles` table while also not included in `profile_collections`. Emails are first sent to participants with emails not in `profiles` to create their accounts, and all participants are then inserted into `profile_collections`. Code and details about the function can be found [here](https://supabase.com/dashboard/project/mvbypxdgotiqghrbzdra/functions/invite-participants).
 
 ## Image Uploading
-> **Warning** Supabase has a 50MB storage limit in the free tier, making it not suitable for production.
+> [!WARNING] 
+> Supabase has a 50MB storage limit in the free tier, making it not suitable for production.
 
 Images should ideally be uploaded in 16:9 aspect ratio to fully utilise the space in the image carousel.
 
-Images are uploaded into a single bucket with collection id as the folder name and under the same filename stored in the `collection_images` table. Images can be accessed under the following format:
+Images are uploaded into a single bucket with collection id as the folder name and under the same filename stored in the `collection_images` table. 
+
+Images can be accessed under the following format:
 `<SUPABASE_URL>/storage/v1/object/public/collection_image_file/<collection_id>/<filename>`
 
 Similar to RLS, the storage bucket is configured with policies such that only researchers that own the collection have full access while participants only have read access. The specific policies can be viewed in [Bucket Policies](https://supabase.com/dashboard/project/mvbypxdgotiqghrbzdra/storage/files/policies).
