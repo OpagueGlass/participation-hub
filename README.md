@@ -37,3 +37,7 @@ npm install
 npm run dev 
 ```
 
+## Future Work
+- Chatbot with access to the research's database schema provided by tbls
+- Keycloak authentication for single sign-on
+

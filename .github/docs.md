@@ -56,7 +56,3 @@ Images can be accessed under the following format:
 `<SUPABASE_URL>/storage/v1/object/public/collection_image_file/<collection_id>/<filename>`
 
 Similar to RLS, the storage bucket is configured with policies such that only researchers that own the collection have full access while participants only have read access. The specific policies can be viewed in [Bucket Policies](https://supabase.com/dashboard/project/mvbypxdgotiqghrbzdra/storage/files/policies).
-
-## Future Work
-- Chatbot with access to the research's database schema provided by tbls
-- Keycloak authentication for single sign-on
